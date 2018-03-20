@@ -1,3 +1,5 @@
+package com.soywiz
+
 import com.soywiz.*
 import kotlin.math.*
 
@@ -35,9 +37,18 @@ class BigNum(val int: BigInt, val scale: Int) {
 
 	operator fun plus(other: BigNum): BigNum = binary(other, BigInt::plus)
 	operator fun minus(other: BigNum): BigNum = binary(other, BigInt::minus)
+	operator fun times(other: BigNum): BigNum = binary(other, BigInt::times)
+	operator fun div(other: BigNum): BigNum = binary(other, BigInt::div)
 
-	private fun binary(other: BigNum, callback: (l: BigInt, r: BigInt) -> BigInt): BigNum {
-		val commonScale = max(this.scale, other.scale)
+	operator fun compareTo(other: BigNum): Int {
+		val commonScale = this.commonScale(other)
+		return this.convertToScale(commonScale).int.compareTo(other.convertToScale(commonScale).int)
+	}
+
+	private fun commonScale(other: BigNum) = max(this.scale, other.scale)
+
+	private inline fun binary(other: BigNum, callback: (l: BigInt, r: BigInt) -> BigInt): BigNum {
+		val commonScale = this.commonScale(other)
 		return BigNum(callback(this.convertToScale(commonScale).int, other.convertToScale(commonScale).int), commonScale)
 	}
 

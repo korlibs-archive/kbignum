@@ -125,7 +125,7 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	}
 
 	operator fun times(other: BigInt): BigInt {
-		if (other == ZERO) return 0.n
+		if (other == ZERO) return 0.bi
 		if (other == ONE) return this
 		if (other == TWO) return this.shl(1)
 		if (other == TEN) return BigInt(UnsignedBigInt.mulSmall(this.data, 10), this.signum)
@@ -145,11 +145,11 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	operator fun rem(other: BigInt): BigInt {
 		if (other == ZERO) error("Division by zero")
 		if (other == ONE) return ZERO
-		if (other == TWO) return getBitInt(0).n
+		if (other == TWO) return getBitInt(0).bi
 		if (other == TEN) {
 			val res = UnsignedBigInt.divRemSmall(this.data, 10)
 			val rem = res.rem
-			val remN = rem.n
+			val remN = rem.bi
 			return remN
 		}
 		TODO()
@@ -224,12 +224,12 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	operator fun unaryPlus(): BigInt = this
 	operator fun unaryMinus(): BigInt = BigInt(this.data, -signum, false)
 
-	operator fun plus(other: Int): BigInt = plus(other.n)
-	operator fun minus(other: Int): BigInt = minus(other.n)
-	operator fun times(other: Int): BigInt = times(other.n)
-	operator fun times(other: Long): BigInt = times(other.n)
-	operator fun div(other: Int): BigInt = div(other.n)
-	operator fun rem(other: Int): BigInt = rem(other.n)
+	operator fun plus(other: Int): BigInt = plus(other.bi)
+	operator fun minus(other: Int): BigInt = minus(other.bi)
+	operator fun times(other: Int): BigInt = times(other.bi)
+	operator fun times(other: Long): BigInt = times(other.bi)
+	operator fun div(other: Int): BigInt = div(other.bi)
+	operator fun rem(other: Int): BigInt = rem(other.bi)
 
 	infix fun and(other: BigInt): BigInt = bitwise(other, Int::and)
 	infix fun or(other: BigInt): BigInt = bitwise(other, Int::or)
@@ -266,7 +266,7 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		val out = StringBuilder()
 		var num = this
 		// Optimize with mutable data
-		while (num != 0.n) {
+		while (num != 0.bi) {
 			val result = UnsignedBigInt.divRemSmall(num.data, radix)
 			out.append(digit(result.rem))
 			num = BigInt(result.div, 1)
@@ -279,6 +279,8 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		val magnitude = (this.data[0].toLong() or (this.data[1].toLong() shl 16)) * signum
 		return magnitude.toInt()
 	}
+
+	fun toBigNum(): BigNum = BigNum(this, 0)
 }
 
 class UInt16ArrayZeroPad private constructor(val data: IntArray) {
@@ -297,11 +299,6 @@ class UInt16ArrayZeroPad private constructor(val data: IntArray) {
 }
 
 fun uint16ArrayOf(vararg values: Int) = UInt16ArrayZeroPad(values.size).apply { for (n in 0 until values.size) this[n] = values[n] }
-
-val Long.n get() = BigInt(this)
-val Int.n get() = BigInt(this)
-val String.n get() = BigInt(this)
-fun String.n(radix: Int) = BigInt(this, radix)
 
 private fun digit(v: Int): Char {
 	if (v in 0..9) return '0' + v

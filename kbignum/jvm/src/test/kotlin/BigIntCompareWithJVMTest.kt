@@ -16,16 +16,16 @@ class BigIntCompareWithJVMTest {
 	fun testBigBig() {
 		val a = "9191291821821972198723892731927412419757607241902412742141904810123913021931"
 		val b = "121231246717581291824912849128509185124190310741841824712837131738172"
-		assertEquals("${BigInteger(a) + BigInteger(b)}", "${a.n + b.n}")
-		assertEquals("${BigInteger(a) - BigInteger(b)}", "${a.n - b.n}")
+		assertEquals("${BigInteger(a) + BigInteger(b)}", "${a.bi + b.bi}")
+		assertEquals("${BigInteger(a) - BigInteger(b)}", "${a.bi - b.bi}")
 	}
 
 	private fun testBinary(callback: (jvmL: BigInteger, jvmR: BigInteger, kL: BigInt, kR: BigInt) -> Unit) {
 		for (l in items) for (r in items) {
 			val jvmL = BigInteger("$l")
 			val jvmR = BigInteger("$r")
-			val kL = l.n
-			val kR = r.n
+			val kL = l.bi
+			val kR = r.bi
 			callback(jvmL, jvmR, kL, kR)
 		}
 	}
