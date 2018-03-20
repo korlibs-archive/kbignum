@@ -5,7 +5,7 @@ import kotlin.math.*
 /**
  * @TODO: Use JVM BigInteger and JS BigInt
  */
-class BigInt private constructor(val data: UInt16Array, val signum: Int, var dummy: Boolean) {
+class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, var dummy: Boolean) {
 	val isSmall get() = data.size <= 1
 	val isZero get() = signum == 0
 	val isNegative get() = signum < 0
@@ -22,7 +22,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 		val TWO = BigInt(uint16ArrayOf(2), 1, true)
 		val TEN = BigInt(uint16ArrayOf(10), 1, true)
 
-		operator fun invoke(data: UInt16Array, signum: Int): BigInt {
+		operator fun invoke(data: UInt16ArrayZeroPad, signum: Int): BigInt {
 			// Trim leading zeros
 			var maxN = 0
 			for (n in data.size - 1 downTo 0) {
@@ -174,7 +174,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	}
 
 	private infix fun shlSmall(count: Int): BigInt {
-		val out = UInt16Array(data.size + 1)
+		val out = UInt16ArrayZeroPad(data.size + 1)
 		var carry = 0
 		val count_rcp = 16 - count
 		for (n in 0 until data.size + 1) {
@@ -187,7 +187,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	}
 
 	private infix fun shrSmall(count: Int): BigInt {
-		val out = UInt16Array(data.size)
+		val out = UInt16ArrayZeroPad(data.size)
 		var carry = 0
 		val count_rcp = 16 - count
 		val LOW_MASK = (1 shl count) - 1
@@ -227,7 +227,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	infix fun xor(other: BigInt): BigInt = bitwise(other, Int::xor)
 
 	private inline fun bitwise(other: BigInt, op: (a: Int, b: Int) -> Int): BigInt {
-		return BigInt(UInt16Array(max(this.data.size, other.data.size)).also {
+		return BigInt(UInt16ArrayZeroPad(max(this.data.size, other.data.size)).also {
 			for (n in 0 until it.size) it[n] = op(this.data[n], other.data[n])
 		}, 1)
 	}
@@ -272,7 +272,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	}
 }
 
-class UInt16Array private constructor(val data: IntArray) {
+class UInt16ArrayZeroPad private constructor(val data: IntArray) {
 	val size get() = data.size
 
 	constructor(size: Int) : this(IntArray(size))
@@ -283,11 +283,11 @@ class UInt16Array private constructor(val data: IntArray) {
 		data[index] = value and 0xFFFF
 	}
 
-	fun contentEquals(other: UInt16Array) = this.data.contentEquals(other.data)
-	fun copyOf(size: Int): UInt16Array = UInt16Array(data.copyOf(size))
+	fun contentEquals(other: UInt16ArrayZeroPad) = this.data.contentEquals(other.data)
+	fun copyOf(size: Int): UInt16ArrayZeroPad = UInt16ArrayZeroPad(data.copyOf(size))
 }
 
-fun uint16ArrayOf(vararg values: Int) = UInt16Array(values.size).apply { for (n in 0 until values.size) this[n] = values[n] }
+fun uint16ArrayOf(vararg values: Int) = UInt16ArrayZeroPad(values.size).apply { for (n in 0 until values.size) this[n] = values[n] }
 
 val Long.n get() = BigInt(this)
 val Int.n get() = BigInt(this)
@@ -310,9 +310,9 @@ private fun digit(c: Char): Int {
 }
 
 object UnsignedBigInt {
-	internal fun add(l: UInt16Array, r: UInt16Array): UInt16Array {
+	internal fun add(l: UInt16ArrayZeroPad, r: UInt16ArrayZeroPad): UInt16ArrayZeroPad {
 		var carry = 0
-		val out = UInt16Array(max(l.size, r.size) + 1)
+		val out = UInt16ArrayZeroPad(max(l.size, r.size) + 1)
 		for (i in 0 until out.size) {
 			val sum = l[i] + r[i] + carry
 			carry = if ((sum ushr 16) != 0) 1 else 0
@@ -322,9 +322,9 @@ object UnsignedBigInt {
 	}
 
 	// l >= 0 && r >= 0 && l >= r
-	internal fun sub(l: UInt16Array, r: UInt16Array): UInt16Array {
+	internal fun sub(l: UInt16ArrayZeroPad, r: UInt16ArrayZeroPad): UInt16ArrayZeroPad {
 		var borrow = 0
-		val out = UInt16Array(max(l.size, r.size) + 1)
+		val out = UInt16ArrayZeroPad(max(l.size, r.size) + 1)
 		for (i in 0 until out.size) {
 			val difference = l[i] - borrow - r[i]
 			out[i] = difference
@@ -333,12 +333,12 @@ object UnsignedBigInt {
 		return out
 	}
 
-	class DivRemSmall(val div: UInt16Array, val rem: Int)
+	class DivRemSmall(val div: UInt16ArrayZeroPad, val rem: Int)
 
-	fun divRemSmall(value: UInt16Array, r: Int): DivRemSmall {
+	fun divRemSmall(value: UInt16ArrayZeroPad, r: Int): DivRemSmall {
 		val length = value.size
 		var rem = 0
-		val qq = UInt16Array(value.size)
+		val qq = UInt16ArrayZeroPad(value.size)
 		for (i in length - 1 downTo 0) {
 			val dd = (rem shl 16) + value[i]
 			val q = dd / r
@@ -348,9 +348,9 @@ object UnsignedBigInt {
 		return DivRemSmall(qq, rem)
 	}
 
-	fun mulSmall(a: UInt16Array, b: Int): UInt16Array {
+	fun mulSmall(a: UInt16ArrayZeroPad, b: Int): UInt16ArrayZeroPad {
 		val l = a.size
-		val out = UInt16Array(l + 1)
+		val out = UInt16ArrayZeroPad(l + 1)
 		var carry = 0
 		var product = 0
 		var i = 0
@@ -368,7 +368,7 @@ object UnsignedBigInt {
 		return out
 	}
 
-	fun compare(l: UInt16Array, r: UInt16Array): Int {
+	fun compare(l: UInt16ArrayZeroPad, r: UInt16ArrayZeroPad): Int {
 		for (n in max(l.size, r.size) - 1 downTo 0) {
 			val vl = l[n]
 			val vr = r[n]
