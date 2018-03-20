@@ -87,12 +87,15 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	}
 
 	operator fun plus(other: BigInt): BigInt {
+		val l = this
+		val r = other
 		return when {
-			other.isZero -> this
-			this.isZero -> other
-			this.signum == other.signum -> BigInt(UnsignedBigInt.add(this.data, other.data), signum)
-			this.isNegative -> (other - this)
-			else -> (this - other)
+			l.isZero -> r
+			r.isZero -> l
+			l.isNegative && r.isPositive -> r - l.absoluteValue
+			l.isPositive && r.isNegative -> l - r.absoluteValue
+			l.isNegative && r.isNegative -> -(l.absoluteValue + r.absoluteValue)
+			else -> BigInt(UnsignedBigInt.add(this.data, other.data), signum)
 		}
 	}
 
@@ -296,85 +299,72 @@ private fun digit(c: Char): Int {
 	}
 }
 
-class UnsignedBigInt private constructor(val data: UInt16Array) {
-	companion object {
-		internal fun add(l: UInt16Array, r: UInt16Array, out: UInt16Array = UInt16Array(max(l.size, r.size) + 1)): UInt16Array {
-			var carry = 0
-			for (n in 0 until max(l.size, r.size) + 1) {
-				val lv = l[n]
-				val rv = r[n]
-				val res = lv + rv + carry
-				out[n] = res
-				carry = res ushr 16
-			}
-			if (carry != 0) error("carry != 0")
-			return out
+object UnsignedBigInt {
+	internal fun add(l: UInt16Array, r: UInt16Array): UInt16Array {
+		var carry = 0
+		val out = UInt16Array(max(l.size, r.size) + 1)
+		for (i in 0 until out.size) {
+			val sum = l[i] + r[i] + carry
+			carry = if ((sum ushr 16) != 0) 1 else 0
+			out[i] = sum - (carry shl 16)
 		}
+		return out
+	}
 
-		// l >= 0 && r >= 0 && l >= r
-		internal fun sub(l: UInt16Array, r: UInt16Array, out: UInt16Array = UInt16Array(max(l.size, r.size) + 1)): UInt16Array {
-			var borrow = 0
-			for (i in 0 until r.size) {
-				val difference = l[i] - borrow - r[i]
-				out[i] = difference
-				borrow = if (difference < 0) 1 else 0
-			}
-
-			for (i in r.size until l.size) {
-				val dif = l[i] - borrow
-				out[i] = dif
-
-				if (dif >= 0) {
-					for (n in (i + 1) until l.size) out[n] = l[n]
-					break
-				}
-			}
-			return out
+	// l >= 0 && r >= 0 && l >= r
+	internal fun sub(l: UInt16Array, r: UInt16Array): UInt16Array {
+		var borrow = 0
+		val out = UInt16Array(max(l.size, r.size) + 1)
+		for (i in 0 until out.size) {
+			val difference = l[i] - borrow - r[i]
+			out[i] = difference
+			borrow = if (difference < 0) 1 else 0
 		}
+		return out
+	}
 
-		class DivRemSmall(val div: UInt16Array, val rem: Int)
+	class DivRemSmall(val div: UInt16Array, val rem: Int)
 
-		fun divRemSmall(value: UInt16Array, r: Int): DivRemSmall {
-			val length = value.size
-			var rem = 0
-			val qq = UInt16Array(value.size)
-			for (i in length - 1 downTo 0) {
-				val dd = (rem shl 16) + value[i]
-				val q = dd / r
-				rem = dd - q * r
-				qq[i] = q
-			}
-			return DivRemSmall(qq, rem)
+	fun divRemSmall(value: UInt16Array, r: Int): DivRemSmall {
+		val length = value.size
+		var rem = 0
+		val qq = UInt16Array(value.size)
+		for (i in length - 1 downTo 0) {
+			val dd = (rem shl 16) + value[i]
+			val q = dd / r
+			rem = dd - q * r
+			qq[i] = q
 		}
+		return DivRemSmall(qq, rem)
+	}
 
-		fun mulSmall(a: UInt16Array, b: Int): UInt16Array {
-			val l = a.size
-			val out = UInt16Array(l + 1)
-			var carry = 0
-			var product = 0
-			var i = 0
-			i = 0
-			while (i < l) {
-				product = a[i] * b + carry
-				carry = (product ushr 16)
-				out[i] = product - (carry shl 16)
-				i++
-			}
-			while (carry > 0) {
-				out[i++] = carry and 0xFFFF
-				carry = (carry ushr 16)
-			}
-			return out
+	fun mulSmall(a: UInt16Array, b: Int): UInt16Array {
+		val l = a.size
+		val out = UInt16Array(l + 1)
+		var carry = 0
+		var product = 0
+		var i = 0
+		i = 0
+		while (i < l) {
+			product = a[i] * b + carry
+			carry = (product ushr 16)
+			out[i] = product - (carry shl 16)
+			i++
 		}
+		while (carry > 0) {
+			out[i++] = carry and 0xFFFF
+			carry = (carry ushr 16)
+		}
+		return out
+	}
 
-		fun compare(l: UInt16Array, r: UInt16Array): Int {
-			for (n in max(l.size, r.size) - 1 downTo 0) {
-				val vl = l[n]
-				val vr = r[n]
-				if (vl < vr) return -1
-				if (vl > vr) return +1
-			}
-			return 0
+	fun compare(l: UInt16Array, r: UInt16Array): Int {
+		for (n in max(l.size, r.size) - 1 downTo 0) {
+			val vl = l[n]
+			val vr = r[n]
+			if (vl < vr) return -1
+			if (vl > vr) return +1
 		}
+		return 0
 	}
 }
