@@ -20,7 +20,8 @@ class BigIntTest {
 	fun testAddSmall() {
 		assertEquals("10", (1.n + 1.n).toString2())
 		assertEquals("11", (1.n + 1.n + 1.n).toString2())
-		assertEquals("10000000000000000", ("1000000000000000".n(2) + "1000000000000000".n(2)).toString2())
+		assertEquals(108888887.n, 99999999.n + 8888888.n)
+		assertEquals("108888887", (99999999.n + 8888888.n).toString())
 	}
 
 	@Test
@@ -32,6 +33,20 @@ class BigIntTest {
 		assertEquals("-50", "${(-100).n - (-50).n}")
 		assertEquals("-150", "${(-100).n - (50).n}")
 		assertEquals("150", "${(100).n - (-50).n}")
+	}
+
+	@Test
+	fun testSubInt() {
+		val res = (-9999999).n - (-8888888).n
+		println("$res")
+
+		val items = listOf(-9999999, -8888888, -100, -50, 0, +50, +100, +8888888, +9999999)
+		for (l in items) for (r in items) {
+			//println("$l - $r = ${l - r}")
+			//println("${l.n} - ${r.n} = ${(l - r).n}")
+			//println("${l.n} - ${r.n} = ${(l.n - r.n)}")
+			assertEquals((l - r).n, l.n - r.n)
+		}
 	}
 
 	@Test

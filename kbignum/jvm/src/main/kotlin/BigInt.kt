@@ -195,9 +195,9 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 		return if (this.isNegative && that.isNegative) -resUnsigned else resUnsigned
 	}
 
-	override fun equals(other: Any?): Boolean {
-		return (other is BigInt) && this.signum == other.signum && this.data.contentEquals(other.data)
-	}
+	override fun hashCode(): Int = this.data.hashCode() * this.signum
+	override fun equals(other: Any?): Boolean =
+		(other is BigInt) && this.signum == other.signum && this.data.contentEquals(other.data)
 
 	val absoluteValue get() = abs()
 	fun abs() = if (this.isZero) ZERO else BigInt(this.data, 1)
@@ -291,24 +291,34 @@ class UnsignedBigInt private constructor(val data: UInt16Array) {
 	companion object {
 		internal fun add(l: UInt16Array, r: UInt16Array, out: UInt16Array = UInt16Array(max(l.size, r.size) + 1)): UInt16Array {
 			var carry = 0
-			for (n in 0 until max(l.size, r.size)) {
+			for (n in 0 until max(l.size, r.size) + 1) {
 				val lv = l[n]
 				val rv = r[n]
 				val res = lv + rv + carry
 				out[n] = res
 				carry = res ushr 16
 			}
+			if (carry != 0) error("carry != 0")
 			return out
 		}
 
+		// l >= 0 && r >= 0 && l >= r
 		internal fun sub(l: UInt16Array, r: UInt16Array, out: UInt16Array = UInt16Array(max(l.size, r.size) + 1)): UInt16Array {
-			var carry = 0
-			for (n in 0 until max(l.size, r.size)) {
-				val lv = l[n]
-				val rv = r[n]
-				val res = lv - rv - carry
-				out[n] = res
-				carry = if (res < 0) -1 else 0
+			var borrow = 0
+			for (i in 0 until r.size) {
+				val difference = l[i] - borrow - r[i]
+				out[i] = difference
+				borrow = if (difference < 0) 1 else 0
+			}
+
+			for (i in r.size until l.size) {
+				val dif = l[i] - borrow
+				out[i] = dif
+
+				if (dif >= 0) {
+					for (n in (i + 1) until l.size) out[n] = l[n]
+					break
+				}
 			}
 			return out
 		}
