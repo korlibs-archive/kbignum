@@ -24,6 +24,17 @@ class BigIntTest {
 	}
 
 	@Test
+	fun testSub() {
+		assertEquals("25", "${100.n - 75.n}")
+		assertEquals("-25", "${75.n - 100.n}")
+		assertEquals("0", "${100.n - 100.n}")
+		assertEquals("0", "${(-100).n - (-100).n}")
+		assertEquals("-50", "${(-100).n - (-50).n}")
+		assertEquals("-150", "${(-100).n - (50).n}")
+		assertEquals("150", "${(100).n - (-50).n}")
+	}
+
+	@Test
 	fun testToString2() {
 		assertEquals("0", "0".n(2).toString2())
 		assertEquals("101011", "101011".n(2).toString2())
@@ -38,5 +49,21 @@ class BigIntTest {
 		assertEquals("10", "${10.n}")
 		assertEquals("100", "${100.n}")
 		assertEquals("999", "${999.n}")
+	}
+
+	@Test
+	fun testCompare() {
+		assertTrue(1.n == 1.n)
+		assertTrue(0.n < 1.n)
+		assertTrue(1.n > 0.n)
+		assertTrue(0.n >= 0.n)
+		assertTrue(1.n >= 0.n)
+		assertTrue(0.n <= 0.n)
+		assertTrue(0.n <= 1.n)
+
+		assertTrue((-1).n < 1.n)
+		assertTrue((1).n > (-1).n)
+
+		assertTrue((-2).n < (-1).n)
 	}
 }

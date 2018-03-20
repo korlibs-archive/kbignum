@@ -10,6 +10,8 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	val isZero get() = signum == 0
 	val isNegative get() = signum < 0
 	val isPositive get() = signum > 0
+	val isNegativeOrZero get() = signum <= 0
+	val isPositiveOrZero get() = signum >= 0
 	val maxBits get() = data.size * 16
 
 	companion object {
@@ -39,7 +41,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 		}
 
 		private fun create(value: Int): BigInt {
-			val magnitude = value.toLong() and 0xFFFFFFFFL
+			val magnitude = value.toLong().absoluteValue
 			if (value == 0) return BigInt(uint16ArrayOf(), 0, true)
 			return BigInt(uint16ArrayOf((magnitude ushr 0).toInt(), (magnitude ushr 16).toInt()), value.sign)
 		}
@@ -88,7 +90,18 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	}
 
 	operator fun minus(other: BigInt): BigInt {
-		TODO()
+		val l = this
+		val r = other
+		return when {
+			r.isZero -> l
+			l.isZero -> -r
+			l.isNegative && r.isNegative -> r.abs() - l.abs() // (-l) - (-r) == (-l) + (r) == (r - l)
+			l.isNegative && r.isPositive -> -(l.absoluteValue + r) // -l - r == -(l + r)
+			l.isPositive && r.isNegative -> l + r.absoluteValue // l - (-r) == l + r
+			l.isPositive && r.isPositive && l < r -> -(r - l)
+			l.isPositive && r.isPositive && l >= r -> BigInt(UnsignedBigInt.sub(l.data, r.data), 1)
+			else -> TODO()
+		}
 	}
 
 	operator fun times(other: BigInt): BigInt {
@@ -175,20 +188,22 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 		return BigInt(out, signum)
 	}
 
-	operator fun compareTo(other: BigInt): Int {
-		val res = (this - other)
-		if (res.isNegative) return -1
-		if (res.isPositive) return +1
-		return 0
+	operator fun compareTo(that: BigInt): Int {
+		if (this.isNegative && that.isPositiveOrZero) return -1
+		if (this.isPositiveOrZero && that.isNegative) return +1
+		val resUnsigned = UnsignedBigInt.compare(this.data, that.data)
+		return if (this.isNegative && that.isNegative) -resUnsigned else resUnsigned
 	}
 
 	override fun equals(other: Any?): Boolean {
 		return (other is BigInt) && this.signum == other.signum && this.data.contentEquals(other.data)
 	}
 
-	fun abs() = BigInt(this.data, 0)
+	val absoluteValue get() = abs()
+	fun abs() = if (this.isZero) ZERO else BigInt(this.data, 1)
 	operator fun unaryPlus(): BigInt = this
-	operator fun unaryMinus(): BigInt = 0.n - this
+	operator fun unaryMinus(): BigInt = BigInt(this.data, -signum, false)
+
 	operator fun plus(other: Int): BigInt = plus(other.n)
 	operator fun minus(other: Int): BigInt = minus(other.n)
 	operator fun times(other: Int): BigInt = times(other.n)
@@ -331,6 +346,16 @@ class UnsignedBigInt private constructor(val data: UInt16Array) {
 				carry = (carry ushr 16)
 			}
 			return out
+		}
+
+		fun compare(l: UInt16Array, r: UInt16Array): Int {
+			for (n in max(l.size, r.size) - 1 downTo 0) {
+				val vl = l[n]
+				val vr = r[n]
+				if (vl < vr) return -1
+				if (vl > vr) return +1
+			}
+			return 0
 		}
 	}
 }
