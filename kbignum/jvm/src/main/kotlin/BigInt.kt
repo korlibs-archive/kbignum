@@ -222,6 +222,16 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	operator fun div(other: Int): BigInt = div(other.n)
 	operator fun rem(other: Int): BigInt = rem(other.n)
 
+	infix fun and(other: BigInt): BigInt = bitwise(other, Int::and)
+	infix fun or(other: BigInt): BigInt = bitwise(other, Int::or)
+	infix fun xor(other: BigInt): BigInt = bitwise(other, Int::xor)
+
+	private inline fun bitwise(other: BigInt, op: (a: Int, b: Int) -> Int): BigInt {
+		return BigInt(UInt16Array(max(this.data.size, other.data.size)).also {
+			for (n in 0 until it.size) it[n] = op(this.data[n], other.data[n])
+		}, 1)
+	}
+
 	override fun toString() = toString(10)
 
 	fun toString(radix: Int): String {
@@ -241,18 +251,18 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	}
 
 	private fun toStringGeneric(radix: Int): String {
-		if (this.isNegative) return "-" + this.abs().toStringGeneric(radix)
+		if (radix !in 2..26) error("Invalid radix $radix!")
 		if (this.isZero) return "0"
-		var out = ""
+		if (this.isNegative) return "-" + this.absoluteValue.toStringGeneric(radix)
+		val out = StringBuilder()
 		var num = this
 		// Optimize with mutable data
 		while (num != 0.n) {
-			//println(num.toString2())
-			val digit = num % radix // Optimize
-			out += digit(digit.toInt())
-			num /= radix
+			val result = UnsignedBigInt.divRemSmall(num.data, radix)
+			out.append(digit(result.rem))
+			num = BigInt(result.div, 1)
 		}
-		return out.reversed()
+		return out.reversed().toString()
 	}
 
 	fun toInt(): Int {

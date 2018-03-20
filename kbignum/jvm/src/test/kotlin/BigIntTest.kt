@@ -81,4 +81,12 @@ class BigIntTest {
 
 		assertTrue((-2).n < (-1).n)
 	}
+
+	@Test
+	fun testBitwise() {
+		assertEquals("${0b101 xor 0b110}", "${0b101.n xor 0b110.n}")
+		assertEquals("${0b101 and 0b110}", "${0b101.n and 0b110.n}")
+		assertEquals("${0b101 or 0b110}", "${0b101.n or 0b110.n}")
+
+	}
 }
