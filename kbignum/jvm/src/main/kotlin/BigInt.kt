@@ -1,19 +1,37 @@
+package com.soywiz
+
 import kotlin.math.*
 
 /**
  * @TODO: Use JVM BigInteger and JS BigInt
  */
-class BigInt private constructor(val data: UInt16Array, val signum: Int) {
+class BigInt private constructor(val data: UInt16Array, val signum: Int, var dummy: Boolean) {
+	val isSmall get() = data.size <= 1
 	val isZero get() = signum == 0
 	val isNegative get() = signum < 0
 	val isPositive get() = signum > 0
 	val maxBits get() = data.size * 16
 
 	companion object {
-		val ZERO = create(0)
-		val MINUS_ONE = create(-1)
-		val ONE = create(1)
-		val TWO = create(2)
+		val ZERO = BigInt(uint16ArrayOf(), 0, true)
+		val MINUS_ONE = BigInt(uint16ArrayOf(1), -1, true)
+		val ONE = BigInt(uint16ArrayOf(1), 1, true)
+		val TWO = BigInt(uint16ArrayOf(2), 1, true)
+		val TEN = BigInt(uint16ArrayOf(10), 1, true)
+
+		operator fun invoke(data: UInt16Array, signum: Int): BigInt {
+			// Trim leading zeros
+			var maxN = 0
+			for (n in data.size - 1 downTo 0) {
+				if (data[n] != 0) {
+					maxN = n + 1
+					break
+				}
+			}
+
+			if (maxN == 0) return ZERO
+			return BigInt(data.copyOf(maxN), signum, false)
+		}
 
 		operator fun invoke(value: Long): BigInt {
 			if (value.toInt().toLong() == value) return invoke(value.toInt())
@@ -22,6 +40,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int) {
 
 		private fun create(value: Int): BigInt {
 			val magnitude = value.toLong() and 0xFFFFFFFFL
+			if (value == 0) return BigInt(uint16ArrayOf(), 0, true)
 			return BigInt(uint16ArrayOf((magnitude ushr 0).toInt(), (magnitude ushr 16).toInt()), value.sign)
 		}
 
@@ -37,8 +56,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int) {
 			if (str == "0") return ZERO
 			if (str.startsWith('-')) return -invoke(str.substring(1, radix))
 			var out = ZERO
-			for (n in 0 until str.length) {
-				val c = str[n]
+			for (c in str) {
 				out *= radix
 				out += digit(c)
 			}
@@ -74,28 +92,38 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int) {
 	}
 
 	operator fun times(other: BigInt): BigInt {
-		if (other == 0.n) return 0.n
-		if (other == 1.n) return this
-		if (other == 2.n) return this.shl(1)
+		if (other == ZERO) return 0.n
+		if (other == ONE) return this
+		if (other == TWO) return this.shl(1)
+		if (other == TEN) return BigInt(UnsignedBigInt.mulSmall(this.data, 10), this.signum)
 		if (other.countBits() == 1) return this.shl(other.trailingZeros())
 		TODO()
 	}
 
 	operator fun div(other: BigInt): BigInt {
-		if (other == 0.n) error("Division by zero")
-		if (other == 1.n) return this
-		if (other == 2.n) return this.shr(1)
+		if (other == ZERO) error("Division by zero")
+		if (other == ONE) return this
+		if (other == TWO) return this.shr(1)
+		if (other == TEN) return BigInt(UnsignedBigInt.divRemSmall(this.data, 10).div, this.signum)
 		if (other.countBits() == 1) return this.shr(other.trailingZeros())
 		TODO()
 	}
 
 	operator fun rem(other: BigInt): BigInt {
+		if (other == ZERO) error("Division by zero")
+		if (other == ONE) return ZERO
+		if (other == TWO) return getBitInt(0).n
+		if (other == TEN) {
+			val res = UnsignedBigInt.divRemSmall(this.data, 10)
+			val rem = res.rem
+			val remN = rem.n
+			return remN
+		}
 		TODO()
 	}
 
-	fun getBit(n: Int): Boolean {
-		return ((data[n / 16] ushr (n % 16)) and 1) != 0
-	}
+	fun getBitInt(n: Int): Int = ((data[n / 16] ushr (n % 16)) and 1)
+	fun getBit(n: Int): Boolean = getBitInt(n) != 0
 
 	infix fun shl(count: Int): BigInt {
 		if (count < 0) return this shr (-count)
@@ -122,14 +150,15 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int) {
 	}
 
 	private infix fun shlSmall(count: Int): BigInt {
-		val out = UInt16Array(data.size)
+		val out = UInt16Array(data.size + 1)
 		var carry = 0
 		val count_rcp = 16 - count
-		for (n in 0 until data.size) {
+		for (n in 0 until data.size + 1) {
 			val v = data[n]
 			out[n] = ((carry) or (v shl count))
 			carry = v ushr count_rcp
 		}
+		if (carry != 0) error("ERROR!")
 		return BigInt(out, signum)
 	}
 
@@ -147,7 +176,10 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int) {
 	}
 
 	operator fun compareTo(other: BigInt): Int {
-		TODO()
+		val res = (this - other)
+		if (res.isNegative) return -1
+		if (res.isPositive) return +1
+		return 0
 	}
 
 	override fun equals(other: Any?): Boolean {
@@ -160,6 +192,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int) {
 	operator fun plus(other: Int): BigInt = plus(other.n)
 	operator fun minus(other: Int): BigInt = minus(other.n)
 	operator fun times(other: Int): BigInt = times(other.n)
+	operator fun times(other: Long): BigInt = times(other.n)
 	operator fun div(other: Int): BigInt = div(other.n)
 	operator fun rem(other: Int): BigInt = rem(other.n)
 
@@ -168,22 +201,45 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int) {
 	fun toString(radix: Int): String {
 		return when (radix) {
 			2 -> toString2()
-			else -> error("Unsupported other radix than 2 at this point")
+			else -> toStringGeneric(radix)
 		}
 	}
 
 	fun toString2(): String {
+		if (this.isNegative) return "-" + this.abs().toString2()
 		var out = ""
 		for (n in 0 until maxBits) out += if (getBit(n)) '1' else '0'
 		out = out.trimEnd('0')
 		if (out.isEmpty()) out = "0"
-		if (signum < 0) out += "-"
 		return out.reversed()
+	}
+
+	private fun toStringGeneric(radix: Int): String {
+		if (this.isNegative) return "-" + this.abs().toStringGeneric(radix)
+		if (this.isZero) return "0"
+		var out = ""
+		var num = this
+		// Optimize with mutable data
+		while (num != 0.n) {
+			//println(num.toString2())
+			val digit = num % radix // Optimize
+			out += digit(digit.toInt())
+			num /= radix
+		}
+		return out.reversed()
+	}
+
+	fun toInt(): Int {
+		val magnitude = (this.data[0].toLong() or (this.data[1].toLong() shl 16)) * signum
+		return magnitude.toInt()
 	}
 }
 
-class UInt16Array(val size: Int) {
-	val data = IntArray(size)
+class UInt16Array private constructor(val data: IntArray) {
+	val size get() = data.size
+
+	constructor(size: Int) : this(IntArray(size))
+
 	operator fun get(index: Int) = data.getOrElse(index) { 0 }
 	operator fun set(index: Int, value: Int) {
 		if (index !in data.indices) return
@@ -191,6 +247,7 @@ class UInt16Array(val size: Int) {
 	}
 
 	fun contentEquals(other: UInt16Array) = this.data.contentEquals(other.data)
+	fun copyOf(size: Int): UInt16Array = UInt16Array(data.copyOf(size))
 }
 
 fun uint16ArrayOf(vararg values: Int) = UInt16Array(values.size).apply { for (n in 0 until values.size) this[n] = values[n] }
@@ -199,6 +256,12 @@ val Long.n get() = BigInt(this)
 val Int.n get() = BigInt(this)
 val String.n get() = BigInt(this)
 fun String.n(radix: Int) = BigInt(this, radix)
+
+private fun digit(v: Int): Char {
+	if (v in 0..9) return '0' + v
+	if (v in 10..26) return 'a' + (v - 10)
+	error("Invalid digit $v")
+}
 
 private fun digit(c: Char): Int {
 	return when (c) {
@@ -223,14 +286,49 @@ class UnsignedBigInt private constructor(val data: UInt16Array) {
 			return out
 		}
 
-		internal fun sub(l: CharArray, r: CharArray, out: CharArray = CharArray(max(l.size, r.size) + 1)): CharArray {
+		internal fun sub(l: UInt16Array, r: UInt16Array, out: UInt16Array = UInt16Array(max(l.size, r.size) + 1)): UInt16Array {
 			var carry = 0
 			for (n in 0 until max(l.size, r.size)) {
 				val lv = l[n]
 				val rv = r[n]
 				val res = lv - rv - carry
-				out[n] = res.toChar()
+				out[n] = res
 				carry = if (res < 0) -1 else 0
+			}
+			return out
+		}
+
+		class DivRemSmall(val div: UInt16Array, val rem: Int)
+
+		fun divRemSmall(value: UInt16Array, r: Int): DivRemSmall {
+			val length = value.size
+			var rem = 0
+			val qq = UInt16Array(value.size)
+			for (i in length - 1 downTo 0) {
+				val dd = (rem shl 16) + value[i]
+				val q = dd / r
+				rem = dd - q * r
+				qq[i] = q
+			}
+			return DivRemSmall(qq, rem)
+		}
+
+		fun mulSmall(a: UInt16Array, b: Int): UInt16Array {
+			val l = a.size
+			val out = UInt16Array(l + 1)
+			var carry = 0
+			var product = 0
+			var i = 0
+			i = 0
+			while (i < l) {
+				product = a[i] * b + carry
+				carry = (product ushr 16)
+				out[i] = product - (carry shl 16)
+				i++
+			}
+			while (carry > 0) {
+				out[i++] = carry and 0xFFFF
+				carry = (carry ushr 16)
 			}
 			return out
 		}

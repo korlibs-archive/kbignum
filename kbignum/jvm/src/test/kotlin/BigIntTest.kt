@@ -1,3 +1,5 @@
+package com.soywiz
+
 import kotlin.test.*
 
 class BigIntTest {
@@ -10,6 +12,8 @@ class BigIntTest {
 		assertEquals("1000000000000000", (1.n * (1 shl 15)).toString2())
 		assertEquals("10000000000000000", (1.n * (1 shl 16)).toString2())
 		assertEquals("100000000000000000", (1.n * (1 shl 17)).toString2())
+		assertEquals("100000000000000000000000000000000000000000000000000000000000000", (1.n * (1L shl 62)).toString2())
+		assertEquals("1${"0".repeat(128)}", (1.n * (1.n shl 128)).toString2())
 	}
 
 	@Test
@@ -17,5 +21,22 @@ class BigIntTest {
 		assertEquals("10", (1.n + 1.n).toString2())
 		assertEquals("11", (1.n + 1.n + 1.n).toString2())
 		assertEquals("10000000000000000", ("1000000000000000".n(2) + "1000000000000000".n(2)).toString2())
+	}
+
+	@Test
+	fun testToString2() {
+		assertEquals("0", "0".n(2).toString2())
+		assertEquals("101011", "101011".n(2).toString2())
+		assertEquals("1000000010000001", "1000000010000001".n(2).toString2())
+		assertEquals("1000000000000000", "1000000000000000".n(2).toString2())
+	}
+
+	@Test
+	fun testToString10() {
+		assertEquals("0", "${0.n}")
+		assertEquals("1", "${1.n}")
+		assertEquals("10", "${10.n}")
+		assertEquals("100", "${100.n}")
+		assertEquals("999", "${999.n}")
 	}
 }
