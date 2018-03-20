@@ -113,24 +113,33 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		}
 	}
 
+	infix fun pow(other: BigInt): BigInt {
+		TODO()
+	}
+
+	infix fun pow(other: Int): BigInt {
+		// Optimize
+		var out = this
+		for (n in 0 until other) out *= this
+		return out
+	}
+
 	operator fun times(other: BigInt): BigInt {
 		if (other == ZERO) return 0.n
 		if (other == ONE) return this
 		if (other == TWO) return this.shl(1)
 		if (other == TEN) return BigInt(UnsignedBigInt.mulSmall(this.data, 10), this.signum)
 		if (other.countBits() == 1) return this.shl(other.trailingZeros())
-		TODO()
+		TODO("$this * $other")
 	}
 
 	operator fun div(other: BigInt): BigInt {
-		val l = this
-		val r = other
 		if (other == ZERO) error("Division by zero")
 		if (other == ONE) return this
 		if (other == TWO) return this.shr(1)
 		if (other == TEN) return BigInt(UnsignedBigInt.divRemSmall(this.data, 10).div, this.signum)
 		if (other.countBits() == 1) return this.shr(other.trailingZeros())
-		TODO()
+		TODO("$this / $other")
 	}
 
 	operator fun rem(other: BigInt): BigInt {
