@@ -13,6 +13,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	val isNegativeOrZero get() = signum <= 0
 	val isPositiveOrZero get() = signum >= 0
 	val maxBits get() = data.size * 16
+	val significantBits get() = maxBits - leadingZeros()
 
 	companion object {
 		val ZERO = BigInt(uint16ArrayOf(), 0, true)
@@ -79,6 +80,12 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 		return 0
 	}
 
+	fun leadingZeros(): Int {
+		if (isZero) return 0
+		for (n in 0 until maxBits) if (getBit(maxBits - n - 1)) return n
+		return maxBits
+	}
+
 	operator fun plus(other: BigInt): BigInt {
 		return when {
 			other.isZero -> this
@@ -99,8 +106,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 			l.isNegative && r.isPositive -> -(l.absoluteValue + r) // -l - r == -(l + r)
 			l.isPositive && r.isNegative -> l + r.absoluteValue // l - (-r) == l + r
 			l.isPositive && r.isPositive && l < r -> -(r - l)
-			l.isPositive && r.isPositive && l >= r -> BigInt(UnsignedBigInt.sub(l.data, r.data), 1)
-			else -> TODO()
+			else -> BigInt(UnsignedBigInt.sub(l.data, r.data), 1)
 		}
 	}
 
@@ -114,6 +120,8 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	}
 
 	operator fun div(other: BigInt): BigInt {
+		val l = this
+		val r = other
 		if (other == ZERO) error("Division by zero")
 		if (other == ONE) return this
 		if (other == TWO) return this.shr(1)
@@ -245,6 +253,7 @@ class BigInt private constructor(val data: UInt16Array, val signum: Int, var dum
 	}
 
 	fun toInt(): Int {
+		if (significantBits > 31) error("Can't represent BigInt as integer")
 		val magnitude = (this.data[0].toLong() or (this.data[1].toLong() shl 16)) * signum
 		return magnitude.toInt()
 	}
