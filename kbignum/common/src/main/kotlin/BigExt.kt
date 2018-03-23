@@ -1,13 +1,13 @@
 package com.soywiz
 
+// Big Integer
 val Long.bi get() = BigInt(this)
 val Int.bi get() = BigInt(this)
 val String.bi get() = BigInt(this)
 fun String.bi(radix: Int) = BigInt(this, radix)
 
-val Double.bd get() = BigNum("$this")
-val Long.bd get() = BigNum(this.bi, 0)
-val Int.bd get() = BigNum(this.bi, 0)
-val String.bd get() = BigNum(this)
-
-
+// Big Number
+val Double.bn get() = BigNum("$this")
+val Long.bn get() = BigNum(this.bi, 0)
+val Int.bn get() = BigNum(this.bi, 0)
+val String.bn get() = BigNum(this)

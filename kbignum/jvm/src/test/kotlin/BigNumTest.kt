@@ -24,7 +24,7 @@ class BigNumTest {
 
 	@Test
 	fun testMultiply() {
-		assertEquals("2.4".bd, "1.2".bd * "2".bd)
+		assertEquals("2.4".bn, "1.2".bn * "2".bn)
 	}
 
 	@Test
@@ -38,7 +38,7 @@ class BigNumTest {
 
 	@Test
 	fun testCompare() {
-		assertTrue("1.5".bd < "3.0".bd)
-		assertTrue("1.5".bd <= "1.5".bd)
+		assertTrue("1.5".bn < "3.0".bn)
+		assertTrue("1.5".bn <= "1.5".bn)
 	}
 }

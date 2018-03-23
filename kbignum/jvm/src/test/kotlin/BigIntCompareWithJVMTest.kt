@@ -17,7 +17,43 @@ class BigIntCompareWithJVMTest {
 		val a = "9191291821821972198723892731927412419757607241902412742141904810123913021931"
 		val b = "121231246717581291824912849128509185124190310741841824712837131738172"
 		assertEquals("${BigInteger(a) + BigInteger(b)}", "${a.bi + b.bi}")
+		assertEquals("${BigInteger(a) + -BigInteger(b)}", "${a.bi + -b.bi}")
+		assertEquals("${-BigInteger(a) + BigInteger(b)}", "${-a.bi + b.bi}")
+		assertEquals("${-BigInteger(a) + -BigInteger(b)}", "${-a.bi + -b.bi}")
+
 		assertEquals("${BigInteger(a) - BigInteger(b)}", "${a.bi - b.bi}")
+		assertEquals("${BigInteger(a) - -BigInteger(b)}", "${a.bi - -b.bi}")
+		assertEquals("${-BigInteger(a) - BigInteger(b)}", "${-a.bi - b.bi}")
+		assertEquals("${-BigInteger(a) - -BigInteger(b)}", "${-a.bi - -b.bi}")
+
+		assertEquals("${BigInteger(a) * BigInteger(b)}", "${a.bi * b.bi}")
+		assertEquals("${BigInteger(a) * -BigInteger(b)}", "${a.bi * -b.bi}")
+		assertEquals("${-BigInteger(a) * BigInteger(b)}", "${-a.bi * b.bi}")
+		assertEquals("${-BigInteger(a) * -BigInteger(b)}", "${-a.bi * -b.bi}")
+	}
+
+	@Test
+	fun testBigSmall() {
+		val a = "123678"
+		val b = "456965"
+		assertEquals("${BigInteger(a) + BigInteger(b)}", "${a.bi + b.bi}")
+		assertEquals("${BigInteger(a) - BigInteger(b)}", "${a.bi - b.bi}")
+		assertEquals("${BigInteger(a) * BigInteger(b)}", "${a.bi * b.bi}")
+		assertEquals("${BigInteger(a) * -BigInteger(b)}", "${a.bi * -b.bi}")
+		assertEquals("${-BigInteger(a) * BigInteger(b)}", "${-a.bi * b.bi}")
+		assertEquals("${-BigInteger(a) * -BigInteger(b)}", "${-a.bi * -b.bi}")
+	}
+
+	@Test
+	fun testBigSmall2() {
+		val a = "192318471586571265712651786924871293164197657612641412412410410"
+		val b = "1234"
+		assertEquals("${BigInteger(a) + BigInteger(b)}", "${a.bi + b.bi}")
+		assertEquals("${BigInteger(a) - BigInteger(b)}", "${a.bi - b.bi}")
+		assertEquals("${BigInteger(a) * BigInteger(b)}", "${a.bi * b.bi}")
+		assertEquals("${BigInteger(a) * -BigInteger(b)}", "${a.bi * -b.bi}")
+		assertEquals("${-BigInteger(a) * BigInteger(b)}", "${-a.bi * b.bi}")
+		assertEquals("${-BigInteger(a) * -BigInteger(b)}", "${-a.bi * -b.bi}")
 	}
 
 	private fun testBinary(callback: (jvmL: BigInteger, jvmR: BigInteger, kL: BigInt, kR: BigInt) -> Unit) {

@@ -128,9 +128,12 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		if (other == ZERO) return 0.bi
 		if (other == ONE) return this
 		if (other == TWO) return this.shl(1)
-		if (other == TEN) return BigInt(UnsignedBigInt.mulSmall(this.data, 10), this.signum)
 		if (other.countBits() == 1) return this.shl(other.trailingZeros())
-		TODO("$this * $other")
+
+		return when {
+			this.isZero || other.isZero -> ZERO
+			else -> BigInt(UnsignedBigInt.mul(this.data, other.data), if (this.signum == other.signum) +1 else -1)
+		}
 	}
 
 	operator fun div(other: BigInt): BigInt {
@@ -339,6 +342,21 @@ object UnsignedBigInt {
 		return out
 	}
 
+	// l >= 0 && r >= 0
+	internal fun mul(l: UInt16ArrayZeroPad, r: UInt16ArrayZeroPad): UInt16ArrayZeroPad {
+		var carry = 0
+		val out = UInt16ArrayZeroPad(l.size + r.size + 1)
+		for (rn in 0 until r.size) {
+			for (ln in 0 until l.size + 1) {
+				val n = ln + rn
+				val res = out[n] + (l[ln] * r[rn]) + carry
+				out[n] = res and 0xFFFF
+				carry = res ushr 16
+			}
+		}
+		return out
+	}
+
 	class DivRemSmall(val div: UInt16ArrayZeroPad, val rem: Int)
 
 	fun divRemSmall(value: UInt16ArrayZeroPad, r: Int): DivRemSmall {
@@ -352,26 +370,6 @@ object UnsignedBigInt {
 			qq[i] = q
 		}
 		return DivRemSmall(qq, rem)
-	}
-
-	fun mulSmall(a: UInt16ArrayZeroPad, b: Int): UInt16ArrayZeroPad {
-		val l = a.size
-		val out = UInt16ArrayZeroPad(l + 1)
-		var carry = 0
-		var product = 0
-		var i = 0
-		i = 0
-		while (i < l) {
-			product = a[i] * b + carry
-			carry = (product ushr 16)
-			out[i] = product - (carry shl 16)
-			i++
-		}
-		while (carry > 0) {
-			out[i++] = carry and 0xFFFF
-			carry = (carry ushr 16)
-		}
-		return out
 	}
 
 	fun compare(l: UInt16ArrayZeroPad, r: UInt16ArrayZeroPad): Int {
