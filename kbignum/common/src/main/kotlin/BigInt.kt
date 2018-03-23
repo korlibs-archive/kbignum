@@ -343,6 +343,8 @@ object UnsignedBigInt {
 	}
 
 	// l >= 0 && r >= 0
+	// TODO optimize using the Karatsuba algorithm:
+	// TODO: - https://en.wikipedia.org/wiki/Multiplication_algorithm#Karatsuba_multiplication
 	internal fun mul(l: UInt16ArrayZeroPad, r: UInt16ArrayZeroPad): UInt16ArrayZeroPad {
 		var carry = 0
 		val out = UInt16ArrayZeroPad(l.size + r.size + 1)
