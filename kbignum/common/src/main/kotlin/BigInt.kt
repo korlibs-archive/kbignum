@@ -16,11 +16,11 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	val significantBits get() = maxBits - leadingZeros()
 
 	companion object {
-		val ZERO = BigInt(uint16ArrayOf(), 0, true)
-		val MINUS_ONE = BigInt(uint16ArrayOf(1), -1, true)
-		val ONE = BigInt(uint16ArrayOf(1), 1, true)
-		val TWO = BigInt(uint16ArrayOf(2), 1, true)
-		val TEN = BigInt(uint16ArrayOf(10), 1, true)
+		val ZERO = BigInt(uint16ArrayZeroPadOf(), 0, true)
+		val MINUS_ONE = BigInt(uint16ArrayZeroPadOf(1), -1, true)
+		val ONE = BigInt(uint16ArrayZeroPadOf(1), 1, true)
+		val TWO = BigInt(uint16ArrayZeroPadOf(2), 1, true)
+		val TEN = BigInt(uint16ArrayZeroPadOf(10), 1, true)
 
 		operator fun invoke(data: UInt16ArrayZeroPad, signum: Int): BigInt {
 			// Trim leading zeros
@@ -43,8 +43,8 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 
 		private fun create(value: Int): BigInt {
 			val magnitude = value.toLong().absoluteValue
-			if (value == 0) return BigInt(uint16ArrayOf(), 0, true)
-			return BigInt(uint16ArrayOf((magnitude ushr 0).toInt(), (magnitude ushr 16).toInt()), value.sign)
+			if (value == 0) return BigInt(uint16ArrayZeroPadOf(), 0, true)
+			return BigInt(uint16ArrayZeroPadOf((magnitude ushr 0).toInt(), (magnitude ushr 16).toInt()), value.sign)
 		}
 
 		operator fun invoke(value: Int): BigInt {
@@ -301,7 +301,7 @@ class UInt16ArrayZeroPad private constructor(val data: IntArray) {
 	fun copyOf(size: Int): UInt16ArrayZeroPad = UInt16ArrayZeroPad(data.copyOf(size))
 }
 
-fun uint16ArrayOf(vararg values: Int) = UInt16ArrayZeroPad(values.size).apply { for (n in 0 until values.size) this[n] = values[n] }
+fun uint16ArrayZeroPadOf(vararg values: Int) = UInt16ArrayZeroPad(values.size).apply { for (n in 0 until values.size) this[n] = values[n] }
 
 private fun digit(v: Int): Char {
 	if (v in 0..9) return '0' + v
@@ -346,15 +346,16 @@ object UnsignedBigInt {
 	// TODO optimize using the Karatsuba algorithm:
 	// TODO: - https://en.wikipedia.org/wiki/Multiplication_algorithm#Karatsuba_multiplication
 	internal fun mul(l: UInt16ArrayZeroPad, r: UInt16ArrayZeroPad): UInt16ArrayZeroPad {
-		var carry = 0
 		val out = UInt16ArrayZeroPad(l.size + r.size + 1)
 		for (rn in 0 until r.size) {
+			var carry = 0
 			for (ln in 0 until l.size + 1) {
 				val n = ln + rn
 				val res = out[n] + (l[ln] * r[rn]) + carry
 				out[n] = res and 0xFFFF
 				carry = res ushr 16
 			}
+			if (carry != 0) error("carry expected to be zero at this point")
 		}
 		return out
 	}

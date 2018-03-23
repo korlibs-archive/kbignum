@@ -56,6 +56,17 @@ class BigIntCompareWithJVMTest {
 		assertEquals("${-BigInteger(a) * -BigInteger(b)}", "${-a.bi * -b.bi}")
 	}
 
+	@Test
+	fun testMultCarry() {
+		var tempJvm = BigInteger.valueOf(0xFFFF)
+		var temp = 0xFFFF.bi
+		for (n in 0 until 10) {
+			tempJvm *= tempJvm
+			temp *= temp
+			assertEquals("$tempJvm", "$temp")
+		}
+	}
+
 	private fun testBinary(callback: (jvmL: BigInteger, jvmR: BigInteger, kL: BigInt, kR: BigInt) -> Unit) {
 		for (l in items) for (r in items) {
 			val jvmL = BigInteger("$l")
