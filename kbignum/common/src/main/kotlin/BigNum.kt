@@ -37,7 +37,7 @@ class BigNum(val int: BigInt, val scale: Int) {
 
 	operator fun plus(other: BigNum): BigNum = binary(other, BigInt::plus)
 	operator fun minus(other: BigNum): BigNum = binary(other, BigInt::minus)
-	operator fun times(other: BigNum): BigNum = binary(other, BigInt::times)
+	operator fun times(other: BigNum): BigNum = BigNum(this.int * other.int, this.scale + other.scale)
 	operator fun div(other: BigNum): BigNum = binary(other, BigInt::div)
 
 	operator fun compareTo(other: BigNum): Int {
@@ -45,11 +45,17 @@ class BigNum(val int: BigInt, val scale: Int) {
 		return this.convertToScale(commonScale).int.compareTo(other.convertToScale(commonScale).int)
 	}
 
+	override fun equals(other: Any?): Boolean = (other is BigNum) && this.compareTo(other) == 0
+
 	private fun commonScale(other: BigNum) = max(this.scale, other.scale)
 
 	private inline fun binary(other: BigNum, callback: (l: BigInt, r: BigInt) -> BigInt): BigNum {
 		val commonScale = this.commonScale(other)
-		return BigNum(callback(this.convertToScale(commonScale).int, other.convertToScale(commonScale).int), commonScale)
+		val l = this.convertToScale(commonScale)
+		val r = other.convertToScale(commonScale)
+		val li = l.int
+		val ri = r.int
+		return BigNum(callback(li, ri), commonScale)
 	}
 
 	override fun toString(): String {

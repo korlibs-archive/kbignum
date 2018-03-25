@@ -25,6 +25,14 @@ class BigNumTest {
 	@Test
 	fun testMultiply() {
 		assertEquals("2.4".bn, "1.2".bn * "2".bn)
+		assertEquals("0.12".bn, "1.2".bn * "0.1".bn)
+		assertEquals("0.012".bn, "1.2".bn * "0.01".bn)
+		assertEquals("0.012".bn, "0.01".bn * "1.2".bn)
+	}
+
+	@Test
+	fun testDivide() {
+		assertEquals("0.5".bn, "1.0".bn / "2".bn)
 	}
 
 	@Test

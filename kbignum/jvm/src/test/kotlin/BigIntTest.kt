@@ -12,7 +12,10 @@ class BigIntTest {
 		assertEquals("1000000000000000", (1.bi * (1 shl 15)).toString2())
 		assertEquals("10000000000000000", (1.bi * (1 shl 16)).toString2())
 		assertEquals("100000000000000000", (1.bi * (1 shl 17)).toString2())
-		assertEquals("100000000000000000000000000000000000000000000000000000000000000", (1.bi * (1L shl 62)).toString2())
+		assertEquals(
+			"100000000000000000000000000000000000000000000000000000000000000",
+			(1.bi * (1L shl 62)).toString2()
+		)
 		assertEquals("1${"0".repeat(128)}", (1.bi * (1.bi shl 128)).toString2())
 	}
 

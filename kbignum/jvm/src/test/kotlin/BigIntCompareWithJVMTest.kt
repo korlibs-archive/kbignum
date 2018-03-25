@@ -4,13 +4,78 @@ import java.math.*
 import kotlin.test.*
 
 class BigIntCompareWithJVMTest {
-	val items = listOf(-9999999, -8888888, -0x10001, -0x10000, -0xFFFF, -0xFFFE, -100, -50, 0, +50, +100, +0xFFFE, +0xFFFF, +0x10000, +0x10001, +8888888, +9999999)
+	val items = listOf(
+		-9999999,
+		-8888888,
+		-0x10001,
+		-0x10000,
+		-0xFFFF,
+		-0xFFFE,
+		-1024,
+		-100,
+		-50,
+		0,
+		+50,
+		+100,
+		+1024,
+		+0xFFFE,
+		+0xFFFF,
+		+0x10000,
+		+0x10001,
+		+8888888,
+		+9999999
+	)
 
 	@Test
-	fun testSub() = testBinary { jvmL, jvmR, kL, kR -> assertEquals("${ jvmL - jvmR}", "${kL - kR}") }
+	fun testSub() = testBinary { jvmL, jvmR, kL, kR -> assertEquals("${jvmL - jvmR}", "${kL - kR}", "$kL - $kR") }
 
 	@Test
-	fun testAdd() = testBinary { jvmL, jvmR, kL, kR -> assertEquals("${jvmL + jvmR}", "${kL + kR}") }
+	fun testAdd() = testBinary { jvmL, jvmR, kL, kR -> assertEquals("${jvmL + jvmR}", "${kL + kR}", "$kL + $kR") }
+
+	@Test
+	fun testMul() = testBinary { jvmL, jvmR, kL, kR -> assertEquals("${jvmL * jvmR}", "${kL * kR}", "$kL * $kR") }
+
+	@Test
+	fun testDiv() =
+		testBinary { jvmL, jvmR, kL, kR -> if (!kR.isZero) assertEquals("${jvmL / jvmR}", "${kL / kR}", "$kL / $kR") }
+
+	@Test
+	fun testDiv2() = run {
+		assertEquals(
+			"${BigInteger("-9999999") / BigInteger("-65536")}",
+			"${"-9999999".bi / "-65536".bi}", "-9999999 / -65536"
+		)
+	}
+
+	@Test
+	fun testRem() =
+		testBinary { jvmL, jvmR, kL, kR -> if (!kR.isZero) assertEquals("${jvmL % jvmR}", "${kL % kR}", "$kL % $kR") }
+
+	@Test
+	fun testLeftShift() =
+		testBinary { jvmL, jvmR, kL, kR -> assertEquals("${jvmL shl 1024}", "${kL shl 1024}", "$kL shl 1024") }
+
+	@Test
+	fun testLeftShift2() =
+		testBinary { jvmL, jvmR, kL, kR -> assertEquals("${jvmL shl 1030}", "${kL shl 1030}", "$kL shl 1030") }
+
+	@Test
+	fun testRightShift() = testBinary { jvmL, jvmR, kL, kR ->
+		assertEquals(
+			"${jvmL / (1 shl 16).toBigInteger()}",
+			"${kL shr 16}",
+			"$kL shr 16"
+		)
+	}
+
+	@Test
+	fun testRightShift2() = testBinary { jvmL, jvmR, kL, kR ->
+		assertEquals(
+			"${jvmL / (1 shl 27).toBigInteger()}",
+			"${kL shr 27}",
+			"$kL shr 27"
+		)
+	}
 
 	@Test
 	fun testBigBig() {
@@ -65,6 +130,7 @@ class BigIntCompareWithJVMTest {
 			temp *= temp
 			assertEquals("$tempJvm", "$temp")
 		}
+		//println("$tempJvm".length)
 	}
 
 	private fun testBinary(callback: (jvmL: BigInteger, jvmR: BigInteger, kL: BigInt, kR: BigInt) -> Unit) {

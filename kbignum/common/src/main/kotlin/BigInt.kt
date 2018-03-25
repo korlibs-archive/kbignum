@@ -57,7 +57,7 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 
 		operator fun invoke(str: String, radix: Int = 10): BigInt {
 			if (str == "0") return ZERO
-			if (str.startsWith('-')) return -invoke(str.substring(1, radix))
+			if (str.startsWith('-')) return -invoke(str.substring(1), radix)
 			var out = ZERO
 			for (c in str) {
 				out *= radix
@@ -125,27 +125,71 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	}
 
 	operator fun times(other: BigInt): BigInt {
-		if (other == ZERO) return 0.bi
-		if (other == ONE) return this
-		if (other == TWO) return this.shl(1)
-		if (other.countBits() == 1) return this.shl(other.trailingZeros())
-
 		return when {
 			this.isZero || other.isZero -> ZERO
+			this == ONE -> other
+			other == ONE -> this
+			this == TWO -> other shl 1
+			other == TWO -> this shl 1
+			other.countBits() == 1 -> BigInt(
+				(this shl other.trailingZeros()).data,
+				if (this.signum == other.signum) +1 else -1
+			)
 			else -> BigInt(UnsignedBigInt.mul(this.data, other.data), if (this.signum == other.signum) +1 else -1)
 		}
 	}
 
 	operator fun div(other: BigInt): BigInt {
-		if (other == ZERO) error("Division by zero")
-		if (other == ONE) return this
-		if (other == TWO) return this.shr(1)
-		if (other == TEN) return BigInt(UnsignedBigInt.divRemSmall(this.data, 10).div, this.signum)
-		if (other.countBits() == 1) return this.shr(other.trailingZeros())
-		TODO("$this / $other")
+		return when {
+			this.isZero -> ZERO
+			other.isZero -> error("Division by zero")
+			other == ONE -> this
+			other == TWO -> this shr 1
+			other == TEN -> BigInt(UnsignedBigInt.divRemSmall(this.data, 10).div, this.signum)
+			other.countBits() == 1 -> BigInt(
+				(this shr other.trailingZeros()).data,
+				if (this.signum == other.signum) +1 else -1
+			)
+			this.signum != other.signum -> -(this.absoluteValue / other.absoluteValue)
+			this.isNegative && other.isNegative -> this.absoluteValue / other.absoluteValue
+			else -> this.divRemBig(other).div
+		}
+	}
+
+	// Asumes positive non zero values this > 0 && other > 0
+	data class DivRem(val div: BigInt, val rem: BigInt)
+
+	// Simple euclidean division
+	fun divRemBig(other: BigInt): DivRem {
+		if (this.isZero) return DivRem(ZERO, ZERO)
+		if (other.isZero) error("division by zero")
+		if (this.isNegative || other.isNegative) error("Non positive numbers")
+		val lbits = this.significantBits
+		val rbits = other.significantBits
+		var rem = this
+		var divisor = other
+		var divisorShift = 0
+		var res = ZERO
+		val initialShiftBits = lbits - rbits + 1
+		divisorShift += initialShiftBits
+		divisor = divisor shl initialShiftBits
+
+		while (divisorShift >= 0) {
+			if (divisor.isZero) error("divisor is zero!")
+
+			if (divisor <= rem) {
+				res += 1 shl divisorShift
+				rem -= divisor
+			}
+			divisorShift--
+			divisor = divisor shr 1
+		}
+
+		return DivRem(res, rem)
 	}
 
 	operator fun rem(other: BigInt): BigInt {
+		if (other.isNegative) return this % other.absoluteValue
 		if (other == ZERO) error("Division by zero")
 		if (other == ONE) return ZERO
 		if (other == TWO) return getBitInt(0).bi
@@ -155,7 +199,8 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 			val remN = rem.bi
 			return remN
 		}
-		TODO()
+		if (this.isNegative) return -this.absoluteValue.divRemBig(other).rem
+		return this.divRemBig(other).rem
 	}
 
 	fun getBitInt(n: Int): Int = ((data[n / 16] ushr (n % 16)) and 1)
@@ -164,25 +209,34 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	infix fun shl(count: Int): BigInt {
 		if (count < 0) return this shr (-count)
 		var out = this
-		var remaining = count
-		while (remaining > 0) {
-			val bits = min(16, remaining)
-			out = out.shlSmall(bits)
-			remaining -= bits
-		}
+		val blockShift = count / 16
+		val smallShift = count % 16
+		if (smallShift > 0) out = out.shlSmall(smallShift)
+		if (blockShift > 0) out = out.shlBlock(blockShift)
 		return out
 	}
 
 	infix fun shr(count: Int): BigInt {
+		//if (this.isNegative) return -(this.absoluteValue shr count) - 1
 		if (count < 0) return this shl (-count)
 		var out = this
-		var remaining = count
-		while (remaining > 0) {
-			val bits = min(16, remaining)
-			out = out.shrSmall(bits)
-			remaining -= bits
-		}
+		val blockShift = count / 16
+		val smallShift = count % 16
+		if (blockShift > 0) out = out.shrBlock(blockShift)
+		if (smallShift > 0) out = out.shrSmall(smallShift)
 		return out
+	}
+
+	private infix fun shlBlock(count: Int): BigInt {
+		val out = UInt16ArrayZeroPad(data.size + count)
+		for (n in 0 until data.size) out[n + count] = this.data[n]
+		return BigInt(out, signum)
+	}
+
+	private infix fun shrBlock(count: Int): BigInt {
+		val out = UInt16ArrayZeroPad(data.size - count)
+		for (n in count until data.size) out[n - count] = this.data[n]
+		return BigInt(out, signum)
 	}
 
 	private infix fun shlSmall(count: Int): BigInt {
@@ -203,9 +257,9 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		var carry = 0
 		val count_rcp = 16 - count
 		val LOW_MASK = (1 shl count) - 1
-		for (n in 0 until data.size) {
+		for (n in data.size - 1 downTo 0) {
 			val v = data[n]
-			out[n] = ((carry shl count_rcp) and (v ushr count))
+			out[n] = ((carry shl count_rcp) or (v ushr count))
 			carry = v and LOW_MASK
 		}
 		return BigInt(out, signum)
@@ -289,7 +343,7 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 class UInt16ArrayZeroPad private constructor(val data: IntArray) {
 	val size get() = data.size
 
-	constructor(size: Int) : this(IntArray(size))
+	constructor(size: Int) : this(IntArray(max(1, size)))
 
 	operator fun get(index: Int) = data.getOrElse(index) { 0 }
 	operator fun set(index: Int, value: Int) {
@@ -301,7 +355,8 @@ class UInt16ArrayZeroPad private constructor(val data: IntArray) {
 	fun copyOf(size: Int): UInt16ArrayZeroPad = UInt16ArrayZeroPad(data.copyOf(size))
 }
 
-fun uint16ArrayZeroPadOf(vararg values: Int) = UInt16ArrayZeroPad(values.size).apply { for (n in 0 until values.size) this[n] = values[n] }
+fun uint16ArrayZeroPadOf(vararg values: Int) =
+	UInt16ArrayZeroPad(values.size).apply { for (n in 0 until values.size) this[n] = values[n] }
 
 private fun digit(v: Int): Char {
 	if (v in 0..9) return '0' + v
