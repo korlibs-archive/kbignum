@@ -204,58 +204,32 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 
     infix fun shl(count: Int): BigInt {
         if (count < 0) return this shr (-count)
-        var out = this
         val blockShift = count / 16
         val smallShift = count % 16
-        if (smallShift > 0) out = out.shlSmall(smallShift)
-        if (blockShift > 0) out = out.shlBlock(blockShift)
-        return out
-    }
-
-    infix fun shr(count: Int): BigInt {
-        //if (this.isNegative) return -(this.absoluteValue shr count) - 1
-        if (count < 0) return this shl (-count)
-        var out = this
-        val blockShift = count / 16
-        val smallShift = count % 16
-        if (blockShift > 0) out = out.shrBlock(blockShift)
-        if (smallShift > 0) out = out.shrSmall(smallShift)
-        return out
-    }
-
-    private infix fun shlBlock(count: Int): BigInt {
-        val out = UInt16ArrayZeroPad(data.size + count)
-        for (n in 0 until data.size) out.data[n + count] = this.data[n]
-        return BigInt(out, signum)
-    }
-
-    private infix fun shrBlock(count: Int): BigInt {
-        val out = UInt16ArrayZeroPad(data.size - count)
-        for (n in count until data.size) out.data[n - count] = this.data[n]
-        return BigInt(out, signum)
-    }
-
-    private infix fun shlSmall(count: Int): BigInt {
-        val out = UInt16ArrayZeroPad(data.size + 1)
+        val out = UInt16ArrayZeroPad(data.size + blockShift + 1)
         var carry = 0
-        val count_rcp = 16 - count
+        val count_rcp = 16 - smallShift
         for (n in 0 until data.size + 1) {
             val v = data[n]
-            out[n] = ((carry) or (v shl count))
+            out[n + blockShift] = ((carry) or (v shl smallShift))
             carry = v ushr count_rcp
         }
         if (carry != 0) error("ERROR!")
         return BigInt(out, signum)
     }
 
-    private infix fun shrSmall(count: Int): BigInt {
-        val out = UInt16ArrayZeroPad(data.size)
+    infix fun shr(count: Int): BigInt {
+        //if (this.isNegative) return -(this.absoluteValue shr count) - 1
+        if (count < 0) return this shl (-count)
+        val blockShift = count / 16
+        val smallShift = count % 16
+        val out = UInt16ArrayZeroPad(data.size - blockShift)
         var carry = 0
-        val count_rcp = 16 - count
-        val LOW_MASK = (1 shl count) - 1
-        for (n in data.size - 1 downTo 0) {
+        val count_rcp = 16 - smallShift
+        val LOW_MASK = (1 shl smallShift) - 1
+        for (n in data.size - 1 downTo blockShift) {
             val v = data[n]
-            out[n] = ((carry shl count_rcp) or (v ushr count))
+            out[n - blockShift] = ((carry shl count_rcp) or (v ushr smallShift))
             carry = v and LOW_MASK
         }
         return BigInt(out, signum)
