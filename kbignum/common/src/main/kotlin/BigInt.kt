@@ -22,6 +22,7 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
         val ONE = BigInt(uint16ArrayZeroPadOf(1), 1, true)
         val TWO = BigInt(uint16ArrayZeroPadOf(2), 1, true)
         val TEN = BigInt(uint16ArrayZeroPadOf(10), 1, true)
+        val SMALL = BigInt(uint16ArrayZeroPadOf(0xFFFF), 1, true)
 
         operator fun invoke(data: UInt16ArrayZeroPad, signum: Int): BigInt {
             // Trim leading zeros
@@ -114,11 +115,11 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
         }
     }
 
-    infix fun pow(other: BigInt): BigInt {
-        if (other.isNegative) error("Not implemented BigInt < 0")
+    infix fun pow(exponent: BigInt): BigInt {
+        if (exponent.isNegative) error("Negative exponent")
         var result = ONE
         var base = this
-        var exp = other
+        var exp = exponent
         while (exp.isNotZero) {
             if (exp.getBit(0)) result *= base
             exp = exp shr 1
@@ -127,7 +128,7 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
         return result
     }
 
-    infix fun pow(other: Int): BigInt = this pow other.bi
+    infix fun pow(exponent: Int): BigInt = this pow exponent.bi
 
     operator fun times(other: BigInt): BigInt {
         return when {
@@ -144,28 +145,33 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
         }
     }
 
-    operator fun div(other: BigInt): BigInt {
-        return when {
-            this.isZero -> ZERO
-            other.isZero -> error("Division by zero")
-            other == ONE -> this
-            other == TWO -> this shr 1
-            other == TEN -> BigInt(UnsignedBigInt.divRemSmall(this.data, 10).div, this.signum)
-            other.countBits() == 1 -> BigInt(
-                (this shr other.trailingZeros()).data,
-                if (this.signum == other.signum) +1 else -1
-            )
-            this.signum != other.signum -> -(this.absoluteValue / other.absoluteValue)
-            this.isNegative && other.isNegative -> this.absoluteValue / other.absoluteValue
-            else -> this.divRemBig(other).div
-        }
-    }
+    operator fun div(other: BigInt): BigInt = divRem(other).div
+    operator fun rem(other: BigInt): BigInt = divRem(other).rem
+
 
     // Asumes positive non zero values this > 0 && other > 0
     data class DivRem(val div: BigInt, val rem: BigInt)
 
+    fun divRem(other: BigInt): DivRem {
+        return when {
+            this.isZero -> DivRem(ZERO, ZERO)
+            other.isZero -> error("Division by zero")
+            this.isNegative && other.isNegative -> this.absoluteValue.divRem(other.absoluteValue).let { DivRem(it.div, -it.rem) }
+            this.isNegative && other.isPositive -> this.absoluteValue.divRem(other.absoluteValue).let { DivRem(-it.div, -it.rem) }
+            this.isPositive && other.isNegative -> this.absoluteValue.divRem(other.absoluteValue).let { DivRem(-it.div, it.rem) }
+            other == ONE -> DivRem(this, ZERO)
+            other == TWO -> DivRem(this shr 1, BigInt(this.getBitInt(0)))
+            other <= SMALL -> UnsignedBigInt.divRemSmall(this.data, other.toInt()).let { DivRem(BigInt(it.div, signum), BigInt(it.rem)) }
+            other.countBits() == 1 -> {
+                val bits = other.trailingZeros()
+                DivRem(this shr bits, this and ((1.bi shl bits) - 1.bi))
+            }
+            else -> this.divRemBig(other)
+        }
+    }
+
     // Simple euclidean division
-    fun divRemBig(other: BigInt): DivRem {
+    private fun divRemBig(other: BigInt): DivRem {
         if (this.isZero) return DivRem(ZERO, ZERO)
         if (other.isZero) error("division by zero")
         if (this.isNegative || other.isNegative) error("Non positive numbers")
@@ -191,21 +197,6 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
         }
 
         return DivRem(res, rem)
-    }
-
-    operator fun rem(other: BigInt): BigInt {
-        if (other.isNegative) return this % other.absoluteValue
-        if (other == ZERO) error("Division by zero")
-        if (other == ONE) return ZERO
-        if (other == TWO) return getBitInt(0).bi
-        if (other == TEN) {
-            val res = UnsignedBigInt.divRemSmall(this.data, 10)
-            val rem = res.rem
-            val remN = rem.bi
-            return remN
-        }
-        if (this.isNegative) return -this.absoluteValue.divRemBig(other).rem
-        return this.divRemBig(other).rem
     }
 
     fun getBitInt(n: Int): Int = ((data[n / 16] ushr (n % 16)) and 1)
@@ -282,7 +273,7 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
         (other is BigInt) && this.signum == other.signum && this.data.contentEquals(other.data)
 
     val absoluteValue get() = abs()
-    fun abs() = if (this.isZero) ZERO else BigInt(this.data, 1)
+    fun abs() = if (this.isZero) ZERO else if (this.isPositive) this else BigInt(this.data, 1)
     operator fun unaryPlus(): BigInt = this
     operator fun unaryMinus(): BigInt = BigInt(this.data, -signum, false)
 
