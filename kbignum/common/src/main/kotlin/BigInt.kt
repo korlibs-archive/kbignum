@@ -69,17 +69,23 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
         }
     }
 
-    // Optimize
     fun countBits(): Int {
-        var out = 0
-        for (n in 0 until maxBits) if (getBit(n)) out++
-        return out
+        var count = 0
+        for (n in 0 until data.size + 1 step 2) {
+            count += (data[n] or (data[n + 1] shl 16)).bitCount()
+        }
+        return count
     }
 
     fun trailingZeros(): Int {
         if (isZero) return 0
-        for (n in 0 until maxBits) if (getBit(n)) return n
-        return 0
+        var count = 0
+        for (n in 0 until data.size + 1 step 2) {
+            val res = (data[n] or (data[n + 1] shl 16)).trailingZeros()
+            count += res
+            if (res != 32) break
+        }
+        return count
     }
 
     fun leadingZeros(): Int {
@@ -156,12 +162,32 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
         return when {
             this.isZero -> DivRem(ZERO, ZERO)
             other.isZero -> error("Division by zero")
-            this.isNegative && other.isNegative -> this.absoluteValue.divRem(other.absoluteValue).let { DivRem(it.div, -it.rem) }
-            this.isNegative && other.isPositive -> this.absoluteValue.divRem(other.absoluteValue).let { DivRem(-it.div, -it.rem) }
-            this.isPositive && other.isNegative -> this.absoluteValue.divRem(other.absoluteValue).let { DivRem(-it.div, it.rem) }
+            this.isNegative && other.isNegative -> this.absoluteValue.divRem(other.absoluteValue).let {
+                DivRem(
+                    it.div,
+                    -it.rem
+                )
+            }
+            this.isNegative && other.isPositive -> this.absoluteValue.divRem(other.absoluteValue).let {
+                DivRem(
+                    -it.div,
+                    -it.rem
+                )
+            }
+            this.isPositive && other.isNegative -> this.absoluteValue.divRem(other.absoluteValue).let {
+                DivRem(
+                    -it.div,
+                    it.rem
+                )
+            }
             other == ONE -> DivRem(this, ZERO)
             other == TWO -> DivRem(this shr 1, BigInt(this.getBitInt(0)))
-            other <= SMALL -> UnsignedBigInt.divRemSmall(this.data, other.toInt()).let { DivRem(BigInt(it.div, signum), BigInt(it.rem)) }
+            other <= SMALL -> UnsignedBigInt.divRemSmall(this.data, other.toInt()).let {
+                DivRem(
+                    BigInt(it.div, signum),
+                    BigInt(it.rem)
+                )
+            }
             other.countBits() == 1 -> {
                 val bits = other.trailingZeros()
                 DivRem(this shr bits, this and ((1.bi shl bits) - 1.bi))
@@ -409,4 +435,27 @@ object UnsignedBigInt {
         }
         return 0
     }
+}
+
+fun Int.bitCount(): Int {
+    var i = this
+    i -= (i.ushr(1) and 0x55555555)
+    i = (i and 0x33333333) + (i.ushr(2) and 0x33333333)
+    i = i + i.ushr(4) and 0x0f0f0f0f
+    i += i.ushr(8)
+    i += i.ushr(16)
+    return i and 0x3f
+}
+
+fun Int.trailingZeros(): Int {
+    // HD, Figure 5-14
+    if (this == 0) return 32
+    var i = this
+    var n = 31
+    var y: Int
+    y = i shl 16; if (y != 0) run { n -= 16; i = y }
+    y = i shl 8; if (y != 0) run { n -= 8; i = y }
+    y = i shl 4; if (y != 0) run { n -= 4; i = y }
+    y = i shl 2; if (y != 0) run { n -= 2; i = y }
+    return n - (i shl 1).ushr(31)
 }

@@ -90,6 +90,18 @@ class BigIntTest {
         assertEquals("${0b101 xor 0b110}", "${0b101.bi xor 0b110.bi}")
         assertEquals("${0b101 and 0b110}", "${0b101.bi and 0b110.bi}")
         assertEquals("${0b101 or 0b110}", "${0b101.bi or 0b110.bi}")
+    }
 
+    @Test
+    fun testBits() {
+        assertEquals(0, "000000000000000000000000000001".bi(2).trailingZeros())
+        assertEquals(7, "100000000000000000000010000000".bi(2).trailingZeros())
+        assertEquals(5, "100000000000000000000010100000".bi(2).trailingZeros())
+        assertEquals(29, "100000000000000000000000000000".bi(2).trailingZeros())
+        assertEquals(30, "1000000000000000000000000000000".bi(2).trailingZeros())
+        assertEquals(31, "10000000000000000000000000000000".bi(2).trailingZeros())
+        assertEquals(32, "100000000000000000000000000000000".bi(2).trailingZeros())
+        assertEquals(33, "1000000000000000000000000000000000".bi(2).trailingZeros())
+        assertEquals(40, "10000000000000000000000000000000000000000".bi(2).trailingZeros())
     }
 }
