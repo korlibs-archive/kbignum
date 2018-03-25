@@ -1,6 +1,5 @@
 package com.soywiz
 
-import com.soywiz.*
 import kotlin.math.*
 
 class BigNum(val int: BigInt, val scale: Int) {
@@ -9,6 +8,10 @@ class BigNum(val int: BigInt, val scale: Int) {
     }
 
     companion object {
+        val ZERO = BigNum(BigInt.ZERO, 0)
+        val ONE = BigNum(BigInt.ONE, 0)
+        val TWO = BigNum(BigInt.TWO, 0)
+
         operator fun invoke(str: String): BigNum {
             //val ss = if (str.contains('.')) str.trimEnd('0') else str
             val ss = str
@@ -36,11 +39,28 @@ class BigNum(val int: BigInt, val scale: Int) {
     operator fun plus(other: BigNum): BigNum = binary(other, BigInt::plus)
     operator fun minus(other: BigNum): BigNum = binary(other, BigInt::minus)
     operator fun times(other: BigNum): BigNum = BigNum(this.int * other.int, this.scale + other.scale)
-    operator fun div(other: BigNum): BigNum {
+    operator fun div(other: BigNum): BigNum = div(other, this.scale)
+
+    fun div(other: BigNum, precision: Int): BigNum {
         val li = this.int * (10.bi pow other.scale)
         val ri = other.int
         val res = li / ri
         return BigNum(res, this.scale)
+    }
+
+    infix fun pow(other: Int) = pow(other, 32)
+
+    fun pow(exponent: Int, precision: Int): BigNum {
+        if (exponent < 0) return ONE.div(this.pow(-exponent, precision), precision)
+        var result = ONE
+        var base = this
+        var exp = exponent
+        while (exp != 0) {
+            if ((exp and 1) != 0) result *= base
+            exp = exp shr 1
+            base *= base
+        }
+        return result
     }
 
     operator fun compareTo(other: BigNum): Int {

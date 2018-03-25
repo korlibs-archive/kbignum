@@ -139,6 +139,25 @@ class BigIntCompareWithJVMTest {
             assertEquals("$tempJvm", "$temp")
         }
         //println("$tempJvm".length)
+        //println(BigDecimal("2.0").pow(-1024, MathContext(1024)))
+    }
+
+    @Test
+    fun testPow() {
+        assertEquals("1", "${0.5.bn pow 0}")
+        assertEquals("0.5", "${0.5.bn pow 1}")
+        assertEquals("0.25", "${0.5.bn pow 2}")
+        assertEquals("0.125", "${0.5.bn pow 3}")
+        assertEquals("0.00000000000000088817841970012523233890533447265625", "${0.5.bn pow 50}")
+        assertEquals("2", "${0.5.bn pow -1}")
+        assertEquals("4", "${0.5.bn pow -2}")
+        assertEquals("8", "${0.5.bn pow -3}")
+        assertEquals("4294967296", "${2.bn pow 32}")
+        assertEquals("1125899906842624", "${2.bn pow 50}")
+        assertEquals(
+            "5357543035931336604742125245300009052807024058527668037218751941851755255624680612465991894078479290637973364587765734125935726428461570217992288787349287401967283887412115492710537302531185570938977091076523237491790970633699383779582771973038531457285598238843271083830214915826312193418602834034688",
+            "${2.bn pow 999}"
+        )
     }
 
     private fun testBinary(callback: (jvmL: BigInteger, jvmR: BigInteger, kL: BigInt, kR: BigInt) -> Unit) {
