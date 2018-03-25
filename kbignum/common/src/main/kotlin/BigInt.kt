@@ -437,25 +437,20 @@ object UnsignedBigInt {
     }
 }
 
+// https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
 fun Int.bitCount(): Int {
-    var i = this
-    i -= (i.ushr(1) and 0x55555555)
-    i = (i and 0x33333333) + (i.ushr(2) and 0x33333333)
-    i = i + i.ushr(4) and 0x0f0f0f0f
-    i += i.ushr(8)
-    i += i.ushr(16)
-    return i and 0x3f
+    val a = this - (this ushr 1 and 0x55555555)
+    val b = (a and 0x33333333) + (a ushr 2 and 0x33333333)
+    return (b + (b shr 4) and 0xF0F0F0F) * 0x1010101 ushr 24
 }
 
+private val MultiplyDeBruijnBitPosition = intArrayOf(
+    0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+    31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+)
+
 fun Int.trailingZeros(): Int {
-    // HD, Figure 5-14
     if (this == 0) return 32
-    var i = this
-    var n = 31
-    var y: Int
-    y = i shl 16; if (y != 0) run { n -= 16; i = y }
-    y = i shl 8; if (y != 0) run { n -= 8; i = y }
-    y = i shl 4; if (y != 0) run { n -= 4; i = y }
-    y = i shl 2; if (y != 0) run { n -= 2; i = y }
-    return n - (i shl 1).ushr(31)
+    val v = this
+    return MultiplyDeBruijnBitPosition[((v and -v) * 0x077CB531) ushr 27]
 }

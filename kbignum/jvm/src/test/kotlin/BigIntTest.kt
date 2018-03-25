@@ -93,7 +93,7 @@ class BigIntTest {
     }
 
     @Test
-    fun testBits() {
+    fun testTrailingZeros() {
         assertEquals(0, "000000000000000000000000000001".bi(2).trailingZeros())
         assertEquals(7, "100000000000000000000010000000".bi(2).trailingZeros())
         assertEquals(5, "100000000000000000000010100000".bi(2).trailingZeros())
@@ -103,5 +103,14 @@ class BigIntTest {
         assertEquals(32, "100000000000000000000000000000000".bi(2).trailingZeros())
         assertEquals(33, "1000000000000000000000000000000000".bi(2).trailingZeros())
         assertEquals(40, "10000000000000000000000000000000000000000".bi(2).trailingZeros())
+    }
+
+    @Test
+    fun testBitCount() {
+        assertEquals(0, "00000000000000000000000000000000000000000".bi(2).countBits())
+        assertEquals(1, "00000000000000000000000000000000000000001".bi(2).countBits())
+        assertEquals(1, "10000000000000000000000000000000000000000".bi(2).countBits())
+        assertEquals(2, "10000000000000000000000000000000000000001".bi(2).countBits())
+        assertEquals(7, "10000000001000001000000010000100001000001".bi(2).countBits())
     }
 }
