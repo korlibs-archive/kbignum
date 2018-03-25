@@ -8,6 +8,7 @@ import kotlin.math.*
 class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, var dummy: Boolean) {
     val isSmall get() = data.size <= 1
     val isZero get() = signum == 0
+    val isNotZero get() = signum != 0
     val isNegative get() = signum < 0
     val isPositive get() = signum > 0
     val isNegativeOrZero get() = signum <= 0
@@ -114,15 +115,19 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
     }
 
     infix fun pow(other: BigInt): BigInt {
-        TODO()
+        if (other.isNegative) error("Not implemented BigInt < 0")
+        var result = ONE
+        var base = this
+        var exp = other
+        while (exp.isNotZero) {
+            if (exp.getBit(0)) result *= base
+            exp = exp shr 1
+            base *= base
+        }
+        return result
     }
 
-    infix fun pow(other: Int): BigInt {
-        // Optimize
-        var out = this
-        for (n in 0 until other) out *= this
-        return out
-    }
+    infix fun pow(other: Int): BigInt = this pow other.bi
 
     operator fun times(other: BigInt): BigInt {
         return when {
@@ -229,13 +234,13 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 
     private infix fun shlBlock(count: Int): BigInt {
         val out = UInt16ArrayZeroPad(data.size + count)
-        for (n in 0 until data.size) out[n + count] = this.data[n]
+        for (n in 0 until data.size) out.data[n + count] = this.data[n]
         return BigInt(out, signum)
     }
 
     private infix fun shrBlock(count: Int): BigInt {
         val out = UInt16ArrayZeroPad(data.size - count)
-        for (n in count until data.size) out[n - count] = this.data[n]
+        for (n in count until data.size) out.data[n - count] = this.data[n]
         return BigInt(out, signum)
     }
 

@@ -10,7 +10,8 @@ class BigNum(val int: BigInt, val scale: Int) {
 
     companion object {
         operator fun invoke(str: String): BigNum {
-            val ss = if (str.contains('.')) str.trimEnd('0') else str
+            //val ss = if (str.contains('.')) str.trimEnd('0') else str
+            val ss = str
             val point = ss.indexOf('.')
             val int = BigInt(ss.replace(".", ""))
             return if (point < 0) {
@@ -22,23 +23,25 @@ class BigNum(val int: BigInt, val scale: Int) {
     }
 
     fun convertToScale(otherScale: Int): BigNum {
-        if (this.scale == otherScale) {
-            return this
-        } else if (otherScale > this.scale) {
-            val scaleAdd = otherScale - this.scale
-            //return BigNum(int * ((10.n) pow scaleAdd), otherScale)
-            var out = int
-            for (n in 0 until scaleAdd) out *= 10
-            return BigNum(out, otherScale)
-        } else {
-            TODO()
+        return when {
+            this.scale == otherScale -> this
+            otherScale > this.scale -> {
+                val scaleAdd = otherScale - this.scale
+                BigNum(int * (10.bi pow scaleAdd), otherScale)
+            }
+            else -> TODO()
         }
     }
 
     operator fun plus(other: BigNum): BigNum = binary(other, BigInt::plus)
     operator fun minus(other: BigNum): BigNum = binary(other, BigInt::minus)
     operator fun times(other: BigNum): BigNum = BigNum(this.int * other.int, this.scale + other.scale)
-    operator fun div(other: BigNum): BigNum = binary(other, BigInt::div)
+    operator fun div(other: BigNum): BigNum {
+        val li = this.int * (10.bi pow other.scale)
+        val ri = other.int
+        val res = li / ri
+        return BigNum(res, this.scale)
+    }
 
     operator fun compareTo(other: BigNum): Int {
         val commonScale = this.commonScale(other)

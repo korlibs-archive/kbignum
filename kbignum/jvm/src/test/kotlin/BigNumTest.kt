@@ -18,6 +18,25 @@ class BigNumTest {
     }
 
     @Test
+    fun testPow() {
+        assertEquals("1", "${10.bi pow 0}")
+        assertEquals("10", "${10.bi pow 1}")
+        assertEquals("10000000000", "${10.bi pow 10}")
+        assertEquals(
+            "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "${10.bi pow 100}"
+        )
+
+        assertEquals("1", "${10.bi pow 0.bi}")
+        assertEquals("10", "${10.bi pow 1.bi}")
+        assertEquals("10000000000", "${10.bi pow 10.bi}")
+        assertEquals(
+            "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "${10.bi pow 100.bi}"
+        )
+    }
+
+    @Test
     fun testAddDifferentScale() {
         assertEquals("11.51", (BigNum("1.2") + BigNum("10.31")).toString())
     }
@@ -32,16 +51,21 @@ class BigNumTest {
 
     @Test
     fun testDivide() {
-        assertEquals("0.5".bn, "1.0".bn / "2".bn)
+        //val rr = BigDecimal("1.000")
+        assertEquals("0.333".bn, "1.000".bn / "3".bn)
+        assertEquals("0.333".bn, "1.000".bn / "3.000".bn)
+        assertEquals("0.3".bn, "1.0".bn / "3".bn)
+        assertEquals("0".bn, "1".bn / "3".bn)
+        assertEquals("0".bn, "1".bn / "3.000".bn)
     }
 
     @Test
     fun testFromString() {
         //assertEquals("-50", BigNum("-050").toString())
         assertEquals("50", BigNum("050").toString())
-        assertEquals("0.00005", BigNum("0.00005000000").toString())
-        assertEquals("0.05", BigNum("0.050").toString())
-        assertEquals("0.05", BigNum(".050").toString())
+        assertEquals("0.00005000000", BigNum("0.00005000000").toString())
+        assertEquals("0.050", BigNum("0.050").toString())
+        assertEquals("0.050", BigNum(".050").toString())
     }
 
     @Test
