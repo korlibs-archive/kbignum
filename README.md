@@ -1,6 +1,6 @@
 # KBigNum
 
-[![Build Status](https://travis-ci.org/soywiz/kbignum.svg?branch=master)](https://travis-ci.org/soywiz/kbignum)
+[![Build Status](https://travis-ci.org/korlibs/kbignum.svg?branch=master)](https://travis-ci.org/korlibs/kbignum)
 
 ## BigInt
 
