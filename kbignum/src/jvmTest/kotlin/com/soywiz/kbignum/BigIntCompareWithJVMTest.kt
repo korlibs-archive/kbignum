@@ -1,4 +1,5 @@
-import com.soywiz.*
+package com.soywiz.kbignum
+
 import java.math.*
 import kotlin.test.*
 

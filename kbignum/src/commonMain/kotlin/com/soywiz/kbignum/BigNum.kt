@@ -1,4 +1,4 @@
-package com.soywiz
+package com.soywiz.kbignum
 
 import kotlin.math.*
 
@@ -38,7 +38,8 @@ class BigNum(val int: BigInt, val scale: Int) {
 
 	operator fun plus(other: BigNum): BigNum = binary(other, BigInt::plus)
 	operator fun minus(other: BigNum): BigNum = binary(other, BigInt::minus)
-	operator fun times(other: BigNum): BigNum = BigNum(this.int * other.int, this.scale + other.scale)
+	operator fun times(other: BigNum): BigNum =
+		BigNum(this.int * other.int, this.scale + other.scale)
 	operator fun div(other: BigNum): BigNum = div(other, this.scale)
 
 	fun div(other: BigNum, precision: Int): BigNum {

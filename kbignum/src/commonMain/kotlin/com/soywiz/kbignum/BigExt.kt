@@ -1,4 +1,4 @@
-package com.soywiz
+package com.soywiz.kbignum
 
 // Big Integer
 val Long.bi get() = BigInt(this)

@@ -1,5 +1,6 @@
 package com.soywiz
 
+import com.soywiz.kbignum.bi
 import kotlin.test.*
 
 class BigIntTest {

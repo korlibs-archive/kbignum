@@ -1,4 +1,4 @@
-package com.soywiz
+package com.soywiz.kbignum
 
 import kotlin.math.*
 
@@ -46,7 +46,12 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		private fun create(value: Int): BigInt {
 			val magnitude = value.toLong().absoluteValue
 			if (value == 0) return BigInt(uint16ArrayZeroPadOf(), 0, true)
-			return BigInt(uint16ArrayZeroPadOf((magnitude ushr 0).toInt(), (magnitude ushr 16).toInt()), value.sign)
+			return BigInt(
+				uint16ArrayZeroPadOf(
+					(magnitude ushr 0).toInt(),
+					(magnitude ushr 16).toInt()
+				), value.sign
+			)
 		}
 
 		operator fun invoke(value: Int): BigInt {
@@ -147,7 +152,10 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 				(this shl other.trailingZeros()).data,
 				if (this.signum == other.signum) +1 else -1
 			)
-			else -> BigInt(UnsignedBigInt.mul(this.data, other.data), if (this.signum == other.signum) +1 else -1)
+			else -> BigInt(
+				UnsignedBigInt.mul(this.data, other.data),
+				if (this.signum == other.signum) +1 else -1
+			)
 		}
 	}
 
@@ -160,7 +168,10 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 
 	fun divRem(other: BigInt): DivRem {
 		return when {
-			this.isZero -> DivRem(ZERO, ZERO)
+			this.isZero -> DivRem(
+				ZERO,
+				ZERO
+			)
 			other.isZero -> error("Division by zero")
 			this.isNegative && other.isNegative -> this.absoluteValue.divRem(other.absoluteValue).let {
 				DivRem(
@@ -180,9 +191,18 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 					it.rem
 				)
 			}
-			other == ONE -> DivRem(this, ZERO)
-			other == TWO -> DivRem(this shr 1, BigInt(this.getBitInt(0)))
-			other <= SMALL -> UnsignedBigInt.divRemSmall(this.data, other.toInt()).let {
+			other == ONE -> DivRem(
+				this,
+				ZERO
+			)
+			other == TWO -> DivRem(
+				this shr 1,
+				BigInt(this.getBitInt(0))
+			)
+			other <= SMALL -> UnsignedBigInt.divRemSmall(
+				this.data,
+				other.toInt()
+			).let {
 				DivRem(
 					BigInt(it.div, signum),
 					BigInt(it.rem)
@@ -198,7 +218,10 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 
 	// Simple euclidean division
 	private fun divRemBig(other: BigInt): DivRem {
-		if (this.isZero) return DivRem(ZERO, ZERO)
+		if (this.isZero) return DivRem(
+			ZERO,
+			ZERO
+		)
 		if (other.isZero) error("division by zero")
 		if (this.isNegative || other.isNegative) error("Non positive numbers")
 		val lbits = this.significantBits
@@ -273,7 +296,10 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		(other is BigInt) && this.signum == other.signum && this.data.contentEquals(other.data)
 
 	val absoluteValue get() = abs()
-	fun abs() = if (this.isZero) ZERO else if (this.isPositive) this else BigInt(this.data, 1)
+	fun abs() = if (this.isZero) ZERO else if (this.isPositive) this else BigInt(
+		this.data,
+		1
+	)
 	operator fun unaryPlus(): BigInt = this
 	operator fun unaryMinus(): BigInt = BigInt(this.data, -signum, false)
 
@@ -289,9 +315,16 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	infix fun xor(other: BigInt): BigInt = bitwise(other, Int::xor)
 
 	private inline fun bitwise(other: BigInt, op: (a: Int, b: Int) -> Int): BigInt {
-		return BigInt(UInt16ArrayZeroPad(max(this.data.size, other.data.size)).also {
-			for (n in 0 until it.size) it[n] = op(this.data[n], other.data[n])
-		}, 1)
+		return BigInt(
+			UInt16ArrayZeroPad(
+				max(
+					this.data.size,
+					other.data.size
+				)
+			).also {
+				for (n in 0 until it.size) it[n] = op(this.data[n], other.data[n])
+			}, 1
+		)
 	}
 
 	override fun toString() = toString(10)
@@ -348,7 +381,8 @@ class UInt16ArrayZeroPad private constructor(val data: IntArray) {
 	}
 
 	fun contentEquals(other: UInt16ArrayZeroPad) = this.data.contentEquals(other.data)
-	fun copyOf(size: Int): UInt16ArrayZeroPad = UInt16ArrayZeroPad(data.copyOf(size))
+	fun copyOf(size: Int): UInt16ArrayZeroPad =
+		UInt16ArrayZeroPad(data.copyOf(size))
 }
 
 fun uint16ArrayZeroPadOf(vararg values: Int) =
