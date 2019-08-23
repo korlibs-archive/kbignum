@@ -1,6 +1,10 @@
-matrix:
+stages:
+  - test
+  - publish
+jobs:
   include:
   - os: linux
+    stage: test
     language: android
     android:
       components:
@@ -13,11 +17,13 @@ matrix:
     script:
     - ./gradlew -s -i assemble check lint testDebugUnitTest
   - os: windows
+    stage: test
     env: KBUILD=windows
     language: shell # java is not supported but jdk is installed
     script:
     - powershell -Command "cmd /c travis_win.bat"
   - os: osx
+    stage: test
     env:
       KBUILD=macos
       JAVA_OPTS=-Xmx2g
@@ -26,19 +32,17 @@ matrix:
     before_install:
     - cp $(/usr/libexec/java_home)/lib/security/cacerts "${JAVA_HOME}/lib/security/cacerts"
     script:
-    - ./gradlew -s -i check build
-  - os: osx
-    services:
-      - docker
+    - ./gradlew -s -i check build localPublishToBintrayIfRequired
+  - os: linux
+    stage: publish
+    language: android
+    jdk: oraclejdk8
     env:
-      KBUILD=macos_bintray_publish
+      KBUILD=publish
       JAVA_OPTS=-Xmx2g
-    language: java
-    jdk: openjdk10
     before_install:
-      - cp $(/usr/libexec/java_home)/lib/security/cacerts "${JAVA_HOME}/lib/security/cacerts"
-      - echo Verifying docker... && docker --version
+      - echo before_instal
     before_script:
       - echo before_script
     script:
-      - ./gradlew -s -i dockerMultiPublishToBintray
+      - ./gradlew -s -i actuallyPublishBintray
