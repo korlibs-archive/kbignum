@@ -6,6 +6,7 @@ DIR c:\java8
 DIR c:\java8\java-1.8.0-openjdk-1.8.0.191-1.b12.ojdkbuild.windows.x86_64
 SET JAVA_HOME=c:\java8\java-1.8.0-openjdk-1.8.0.191-1.b12.ojdkbuild.windows.x86_64
 
+SET GRADLE_OPTS=-Dorg.gradle.daemon=false
 CALL gradlew.bat --no-daemon -s -i mingwX64Test
 SET GRADLE_ERROR_LEVEL=%errorlevel%
 CALL gradlew.bat --stop

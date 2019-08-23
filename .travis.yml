@@ -63,7 +63,7 @@ jobs:
       - ./gradlew -s -i localPublishToBintrayIfRequired
   - os: linux
     stage: publish
-    language: android
+    language: java
     jdk: oraclejdk8
     env:
       KBUILD=publish
