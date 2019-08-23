@@ -32,10 +32,11 @@ matrix:
       - docker
     env:
       KBUILD=macos_bintray_publish
-      AVA_OPTS=-Xmx2g
+      JAVA_OPTS=-Xmx2g
     language: java
     jdk: openjdk10
     before_install:
       - cp $(/usr/libexec/java_home)/lib/security/cacerts "${JAVA_HOME}/lib/security/cacerts"
     script:
+      - echo Verifying docker... && docker --version
       - ./gradlew -s -i dockerMultiPublishToBintray
