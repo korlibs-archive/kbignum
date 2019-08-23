@@ -37,6 +37,8 @@ matrix:
     jdk: openjdk10
     before_install:
       - cp $(/usr/libexec/java_home)/lib/security/cacerts "${JAVA_HOME}/lib/security/cacerts"
-    script:
       - echo Verifying docker... && docker --version
+    before_script:
+      - echo before_script
+    script:
       - ./gradlew -s -i dockerMultiPublishToBintray
