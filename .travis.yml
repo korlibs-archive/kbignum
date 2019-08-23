@@ -28,11 +28,11 @@ matrix:
     script:
     - ./gradlew -s -i check build
   - os: osx
-  	services:
-	  - docker
+    services:
+      - docker
     env:
-	  KBUILD=macos_bintray_publish
-	  AVA_OPTS=-Xmx2g
+      KBUILD=macos_bintray_publish
+      AVA_OPTS=-Xmx2g
     language: java
     jdk: openjdk10
     before_install:
