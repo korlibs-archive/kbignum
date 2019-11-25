@@ -3,15 +3,23 @@ name: CI
 on: [push]
 
 jobs:
-  build:
-
-    runs-on: [macOS-10.14]
-
+  build-windows:
+    runs-on: windows
     steps:
       - uses: actions/checkout@v1
       - name: Windows
-        run: ./gradlew_win --no-daemon mingwX64Test
+        run: CALL gradlew.bat --no-daemon mingwX64Test
+
+  build-mac:
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
       - name: Mac
-        run: ./gradlew check -x jsBrowserTest
-      - name: Linux
-        run: ./gradlew_linux check -x jsBrowserTest
+        run: ./gradlew --no-daemon check -x jsBrowserTest
+
+  build-linux:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Mac
+        run: ./gradlew --no-daemon check -x jsBrowserTest
