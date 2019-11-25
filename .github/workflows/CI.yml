@@ -9,6 +9,7 @@ jobs:
       - uses: actions/checkout@v1
       - name: Windows
         run: CALL gradlew.bat --no-daemon mingwX64Test
+        shell: cmd
 
   build-mac:
     runs-on: macOS-10.14
