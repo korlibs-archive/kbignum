@@ -1,0 +1,17 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: [macOS-10.14]
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Windows
+        run: ./gradlew_win --no-daemon mingwX64Test
+      - name: Mac
+        run: ./gradlew check -x jsBrowserTest
+      - name: Linux
+        run: ./gradlew_linux check -x jsBrowserTest
