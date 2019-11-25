@@ -22,5 +22,5 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - name: Mac
+      - name: Linux
         run: ./gradlew --no-daemon check -x jsBrowserTest
