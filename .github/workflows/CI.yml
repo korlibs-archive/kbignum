@@ -18,6 +18,7 @@ jobs:
         run: ./gradlew --no-daemon check -x jsBrowserTest
 
   build-linux:
+    needs: [build-windows, build-mac]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
