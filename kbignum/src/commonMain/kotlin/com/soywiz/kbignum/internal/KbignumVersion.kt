@@ -1,3 +1,3 @@
 package com.soywiz.kbignum.internal
 
-internal const val KBIGNUM_VERSION = "1.3.2-SNAPSHOT"
+internal const val KBIGNUM_VERSION = "1.3.2"
