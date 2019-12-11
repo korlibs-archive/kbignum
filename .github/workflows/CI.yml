@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Windows
-        run: CALL gradlew.bat --no-daemon localPublishToBintrayIfRequiredOnCiReleaseTagNoPR
+        run: CALL gradlew.bat --no-daemon assemble check localPublishToBintrayIfRequiredOnCiReleaseTagNoPR
         shell: cmd
 
   build-mac:
