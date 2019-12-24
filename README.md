@@ -3,7 +3,7 @@
 <!-- BADGES -->
 <p align="center">
 	<a href="https://travis-ci.org/korlibs/kbignum"><img alt="Build Status" src="https://travis-ci.org/korlibs/kbignum.svg?branch=master" /></a>
-	<a href="http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22kbignum%22"><img alt="Maven Version" src="https://img.shields.io/github/tag/korlibs/kbignum.svg?style=flat&label=maven" /></a>
+	<a href="https://bintray.com/korlibs/korlibs/kbignum"><img alt="Maven Version" src="https://img.shields.io/bintray/v/korlibs/korlibs/kbignum.svg?style=flat&label=maven" /></a>
 	<a href="https://slack.soywiz.com/"><img alt="Slack" src="https://img.shields.io/badge/chat-on%20slack-green?style=flat&logo=slack" /></a>
 </p>
 <!-- /BADGES -->
