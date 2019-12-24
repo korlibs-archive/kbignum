@@ -2,7 +2,7 @@
 
 <!-- BADGES -->
 <p align="center">
-	<a href="https://github.com/"korlibs"/"kbignum"/actions"><img alt="Build Status" src="https://github.com/"korlibs"/"kbignum"/workflows/CI/badge.svg" /></a>
+	<a href="https://github.com/korlibs/kbignum/actions"><img alt="Build Status" src="https://github.com/korlibs/kbignum/workflows/CI/badge.svg" /></a>
 	<a href="https://bintray.com/korlibs/korlibs/kbignum"><img alt="Maven Version" src="https://img.shields.io/bintray/v/korlibs/korlibs/kbignum.svg?style=flat&label=maven" /></a>
 	<a href="https://slack.soywiz.com/"><img alt="Slack" src="https://img.shields.io/badge/chat-on%20slack-green?style=flat&logo=slack" /></a>
 </p>
