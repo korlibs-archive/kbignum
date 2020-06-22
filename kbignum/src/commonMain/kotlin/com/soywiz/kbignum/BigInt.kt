@@ -130,10 +130,10 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		if (exponent.isNegative) error("Negative exponent")
 		var result = ONE
 		var base = this
-		var exp = exponent
-		while (exp.isNotZero) {
-			if (exp.getBit(0)) result *= base
-			exp = exp shr 1
+        var expBit = 0
+        val expMaxBits = exponent.significantBits
+		while (expBit < expMaxBits) {
+			if (exponent.getBit(expBit++)) result *= base
 			base *= base
 		}
 		return result
