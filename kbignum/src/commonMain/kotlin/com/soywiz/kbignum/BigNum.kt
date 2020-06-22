@@ -25,16 +25,11 @@ class BigNum(val int: BigInt, val scale: Int) {
 		}
 	}
 
-	fun convertToScale(otherScale: Int): BigNum {
-		return when {
-			this.scale == otherScale -> this
-			otherScale > this.scale -> {
-				val scaleAdd = otherScale - this.scale
-				BigNum(int * (10.bi pow scaleAdd), otherScale)
-			}
-			else -> TODO()
-		}
-	}
+	fun convertToScale(otherScale: Int): BigNum = when {
+        this.scale == otherScale -> this
+        otherScale > this.scale -> BigNum(int * (10.bi pow (otherScale - this.scale)), otherScale)
+        else -> BigNum(int / (10.bi pow (this.scale - otherScale)), otherScale)
+    }
 
 	operator fun plus(other: BigNum): BigNum = binary(other, BigInt::plus)
 	operator fun minus(other: BigNum): BigNum = binary(other, BigInt::minus)

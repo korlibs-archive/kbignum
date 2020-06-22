@@ -80,4 +80,15 @@ class BigNumTest {
     fun testNegative() {
         assertEquals("-0.0001", "-0.0001".bn.toString())
     }
+
+    @Test
+    fun testConvertToScale() {
+        assertEquals(3, "0.001".bn.scale)
+        assertEquals(4, "0.001".bn.convertToScale(4).scale)
+        assertEquals("0.001", "0.001".bn.convertToScale(3).toString())
+        assertEquals("0.0010", "0.001".bn.convertToScale(4).toString())
+        assertEquals("0.001", "0.001".bn.convertToScale(4).convertToScale(3).toString())
+        //"0.001".bn.convertToScale()
+        //assertEquals("-0.0001", "-0.0001".bn.toString())
+    }
 }
