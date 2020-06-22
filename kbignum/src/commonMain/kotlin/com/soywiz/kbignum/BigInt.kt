@@ -133,8 +133,9 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
         var expBit = 0
         val expMaxBits = exponent.significantBits
 		while (expBit < expMaxBits) {
-			if (exponent.getBit(expBit++)) result *= base
+			if (exponent.getBit(expBit)) result *= base
 			base *= base
+            expBit++
 		}
 		return result
 	}
