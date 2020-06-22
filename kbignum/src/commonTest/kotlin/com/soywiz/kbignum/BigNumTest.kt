@@ -75,4 +75,9 @@ class BigNumTest {
 		assertTrue("1.5".bn < "3.0".bn)
 		assertTrue("1.5".bn <= "1.5".bn)
 	}
+
+    @Test
+    fun testNegative() {
+        assertEquals("-0.0001", "-0.0001".bn.toString())
+    }
 }

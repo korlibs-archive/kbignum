@@ -83,13 +83,13 @@ class BigNum(val int: BigInt, val scale: Int) {
 	}
 
 	override fun toString(): String {
-		//return "BigNum($int, $scale)"
-		val out = "$int"
-		val pos = out.length - scale
-		return if (pos <= 0) {
-			"0." + "0".repeat(-pos) + out
-		} else {
-			(out.substring(0, pos) + "." + out.substring(pos)).trimEnd('.')
-		}
+        val isNegative = int.isNegative
+        val out = "${int.abs()}"
+        val pos = out.length - scale
+        return (if (isNegative) "-" else "") + if (pos <= 0) {
+            "0." + "0".repeat(-pos) + out
+        } else {
+            (out.substring(0, pos) + "." + out.substring(pos)).trimEnd('.')
+        }
 	}
 }
