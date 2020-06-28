@@ -22,7 +22,15 @@ class BigIntTest {
 		assertEquals("1${"0".repeat(128)}", (1.bi * (1.bi shl 128)).toString2())
 	}
 
-	@Test
+    @Test
+    fun testFailingIr() {
+        assertEquals(
+            "100000000000000000000000000000000000000000000000000000000000000",
+            (1.bi * (1L shl 62)).toString2()
+        )
+    }
+
+    @Test
 	fun testAddSmall() {
 		assertEquals("10", (1.bi + 1.bi).toString2())
 		assertEquals("11", (1.bi + 1.bi + 1.bi).toString2())
