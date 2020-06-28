@@ -1,6 +1,11 @@
 package com.soywiz.kbignum
 
+import com.soywiz.kbignum.internal.bitCount
+import com.soywiz.kbignum.internal.leadingZeros
+import com.soywiz.kbignum.internal.trailingZeros
 import kotlin.math.*
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 /**
  * @TODO: Use JVM BigInteger and JS BigInt
@@ -13,10 +18,12 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	val isPositive get() = signum > 0
 	val isNegativeOrZero get() = signum <= 0
 	val isPositiveOrZero get() = signum >= 0
-	val maxBits get() = data.size * 16
+	val maxBits get() = data.size * CHUNK_BITS
 	val significantBits get() = maxBits - leadingZeros()
 
 	companion object {
+        internal const val CHUNK_BITS = Short.SIZE_BITS // UInt16ArrayZeroPad
+
 		val ZERO = BigInt(uint16ArrayZeroPadOf(), 0, true)
 		val MINUS_ONE = BigInt(uint16ArrayZeroPadOf(1), -1, true)
 		val ONE = BigInt(uint16ArrayZeroPadOf(1), 1, true)
@@ -44,8 +51,8 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		}
 
 		private fun create(value: Int): BigInt {
+            if (value == 0) return BigInt(uint16ArrayZeroPadOf(), 0, true)
 			val magnitude = value.toLong().absoluteValue
-			if (value == 0) return BigInt(uint16ArrayZeroPadOf(), 0, true)
 			return BigInt(
 				uint16ArrayZeroPadOf(
 					(magnitude ushr 0).toInt(),
@@ -57,7 +64,10 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		operator fun invoke(value: Int): BigInt {
 			// Optimize by directly using the array
 			return when (value) {
-				-1 -> MINUS_ONE; 0 -> ZERO; 1 -> ONE; 2 -> TWO
+				-1 -> MINUS_ONE
+                0 -> ZERO
+                1 -> ONE
+                2 -> TWO
 				else -> create(value)
 			}
 		}
@@ -76,26 +86,32 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 
 	fun countBits(): Int {
 		var count = 0
-		for (n in 0 until data.size + 1 step 2) {
-			count += (data[n] or (data[n + 1] shl 16)).bitCount()
-		}
+		for (n in 0 until data.size) count += data[n].bitCount()
 		return count
 	}
 
-	fun trailingZeros(): Int {
-		if (isZero) return 0
-		var count = 0
-		for (n in 0 until data.size + 1 step 2) {
-			val res = (data[n] or (data[n + 1] shl 16)).trailingZeros()
-			count += res
-			if (res != 32) break
-		}
-		return count
-	}
-
+    /** Number of leadingZeros with the size of [maxBits] */
 	fun leadingZeros(): Int {
-		if (isZero) return 0
-		for (n in 0 until maxBits) if (getBit(maxBits - n - 1)) return n
+        if (isZero) return maxBits
+        for (n in 0 until data.size) {
+            val dataN = data[data.size - n - 1]
+            if (dataN != 0) {
+                //println("dataN: $dataN : trailingZeros=${dataN.trailingZeros()}")
+                return (16 * n) + (dataN.leadingZeros() - 16)
+            }
+        }
+        return maxBits
+	}
+
+    /** Number of trailingZeros with the size of [maxBits] */
+	fun trailingZeros(): Int {
+		if (isZero) return maxBits
+        for (n in 0 until data.size) {
+            val dataN = data[n]
+            if (dataN != 0) {
+                return 16 * n + dataN.trailingZeros()
+            }
+        }
 		return maxBits
 	}
 
@@ -126,21 +142,40 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		}
 	}
 
-	infix fun pow(exponent: BigInt): BigInt {
+	@OptIn(ExperimentalTime::class)
+    infix fun pow(exponent: BigInt): BigInt {
 		if (exponent.isNegative) error("Negative exponent")
-		var result = ONE
-		var base = this
+        if (exponent.isZero) return 1.bi
+        if (exponent == 1.bi) return this
+        var base = this
         var expBit = 0
         val expMaxBits = exponent.significantBits
-		while (expBit < expMaxBits) {
-			if (exponent.getBit(expBit)) result *= base
-			base *= base
+        //println("$exponent -> maxBits=${exponent.maxBits}, leadingZeros=${exponent.leadingZeros()}, trailingZeros=${exponent.trailingZeros()}, expMaxBits=$expMaxBits")
+        if (expMaxBits < 32) return pow(exponent.toInt())
+		var result = ONE
+        while (expBit < expMaxBits) {
+            if (exponent.getBit(expBit)) result *= base
+            base *= base
             expBit++
-		}
+        }
 		return result
 	}
 
-	infix fun pow(exponent: Int): BigInt = this pow exponent.bi
+	infix fun pow(exponent: Int): BigInt {
+        //return this pow exponent.bi
+        if (exponent < 0) error("Negative exponent")
+        if (exponent == 0) return 1.bi
+        if (exponent == 1) return this
+        var result = ONE
+        var base = this
+        var exp = exponent
+        while (exp != 0) {
+            if ((exp and 1) != 0) result *= base
+            base *= base
+            exp /= 2
+        }
+        return result
+    }
 
 	operator fun times(other: BigInt): BigInt {
 		return when {
@@ -175,35 +210,17 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 			)
 			other.isZero -> error("Division by zero")
 			this.isNegative && other.isNegative -> this.absoluteValue.divRem(other.absoluteValue).let {
-				DivRem(
-					it.div,
-					-it.rem
-				)
+				DivRem(it.div, -it.rem)
 			}
 			this.isNegative && other.isPositive -> this.absoluteValue.divRem(other.absoluteValue).let {
-				DivRem(
-					-it.div,
-					-it.rem
-				)
+				DivRem(-it.div, -it.rem)
 			}
 			this.isPositive && other.isNegative -> this.absoluteValue.divRem(other.absoluteValue).let {
-				DivRem(
-					-it.div,
-					it.rem
-				)
+				DivRem(-it.div, it.rem)
 			}
-			other == ONE -> DivRem(
-				this,
-				ZERO
-			)
-			other == TWO -> DivRem(
-				this shr 1,
-				BigInt(this.getBitInt(0))
-			)
-			other <= SMALL -> UnsignedBigInt.divRemSmall(
-				this.data,
-				other.toInt()
-			).let {
+			other == ONE -> DivRem(this, ZERO)
+			other == TWO -> DivRem(this shr 1, BigInt(this.getBitInt(0)))
+			other <= SMALL -> UnsignedBigInt.divRemSmall(this.data, other.toInt()).let {
 				DivRem(
 					BigInt(it.div, signum),
 					BigInt(it.rem)
@@ -293,14 +310,10 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	}
 
 	override fun hashCode(): Int = this.data.hashCode() * this.signum
-	override fun equals(other: Any?): Boolean =
-		(other is BigInt) && this.signum == other.signum && this.data.contentEquals(other.data)
+	override fun equals(other: Any?): Boolean = (other is BigInt) && this.signum == other.signum && this.data.contentEquals(other.data)
 
 	val absoluteValue get() = abs()
-	fun abs() = if (this.isZero) ZERO else if (this.isPositive) this else BigInt(
-		this.data,
-		1
-	)
+	fun abs() = if (this.isZero) ZERO else if (this.isPositive) this else BigInt(this.data, 1)
 	operator fun unaryPlus(): BigInt = this
 	operator fun unaryMinus(): BigInt = BigInt(this.data, -signum, false)
 
@@ -362,7 +375,7 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	}
 
 	fun toInt(): Int {
-		if (significantBits > 31) error("Can't represent BigInt as integer")
+		if (significantBits > 31) error("Can't represent BigInt($this) as integer: maxBits=$maxBits, significantBits=$significantBits, trailingZeros=${trailingZeros()}")
 		val magnitude = (this.data[0].toLong() or (this.data[1].toLong() shl 16)) * signum
 		return magnitude.toInt()
 	}
@@ -375,15 +388,17 @@ class UInt16ArrayZeroPad private constructor(val data: IntArray) {
 
 	constructor(size: Int) : this(IntArray(max(1, size)))
 
-	operator fun get(index: Int) = data.getOrElse(index) { 0 }
+	operator fun get(index: Int): Int {
+        if (index !in data.indices) return 0
+        return data[index]
+    }
 	operator fun set(index: Int, value: Int) {
 		if (index !in data.indices) return
 		data[index] = value and 0xFFFF
 	}
 
 	fun contentEquals(other: UInt16ArrayZeroPad) = this.data.contentEquals(other.data)
-	fun copyOf(size: Int): UInt16ArrayZeroPad =
-		UInt16ArrayZeroPad(data.copyOf(size))
+	fun copyOf(size: Int): UInt16ArrayZeroPad = UInt16ArrayZeroPad(data.copyOf(size))
 }
 
 fun uint16ArrayZeroPadOf(vararg values: Int) =
@@ -470,22 +485,4 @@ object UnsignedBigInt {
 		}
 		return 0
 	}
-}
-
-// https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
-fun Int.bitCount(): Int {
-	val a = this - (this ushr 1 and 0x55555555)
-	val b = (a and 0x33333333) + (a ushr 2 and 0x33333333)
-	return (b + (b shr 4) and 0xF0F0F0F) * 0x1010101 ushr 24
-}
-
-private val MultiplyDeBruijnBitPosition = intArrayOf(
-	0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
-	31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
-)
-
-fun Int.trailingZeros(): Int {
-	if (this == 0) return 32
-	val v = this
-	return MultiplyDeBruijnBitPosition[((v and -v) * 0x077CB531) ushr 27]
 }

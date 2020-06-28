@@ -1,6 +1,8 @@
 package com.soywiz
 
 import com.soywiz.kbignum.bi
+import com.soywiz.kbignum.internal.leadingZeros
+import com.soywiz.kbignum.internal.trailingZeros
 import kotlin.test.*
 
 class BigIntTest {
@@ -95,6 +97,10 @@ class BigIntTest {
 
 	@Test
 	fun testTrailingZeros() {
+        assertEquals(32, 0.trailingZeros())
+        assertEquals(0, 1.trailingZeros())
+        assertEquals(1, 2.trailingZeros())
+        assertEquals(16, "000000000000000000000000000000".bi(2).trailingZeros())
 		assertEquals(0, "000000000000000000000000000001".bi(2).trailingZeros())
 		assertEquals(7, "100000000000000000000010000000".bi(2).trailingZeros())
 		assertEquals(5, "100000000000000000000010100000".bi(2).trailingZeros())
@@ -106,6 +112,22 @@ class BigIntTest {
 		assertEquals(40, "10000000000000000000000000000000000000000".bi(2).trailingZeros())
 	}
 
+    @Test
+    fun testLeadingZeros() {
+        assertEquals(32, 0.leadingZeros())
+        assertEquals(31, 1.leadingZeros())
+        assertEquals(30, 2.leadingZeros())
+        assertEquals(15, "000000000000000000000000000001".bi(2).leadingZeros())
+        assertEquals(2, "100000000000000000000010000000".bi(2).leadingZeros())
+        assertEquals(2, "100000000000000000000010100000".bi(2).leadingZeros())
+        assertEquals(2, "100000000000000000000000000000".bi(2).leadingZeros())
+        assertEquals(1, "1000000000000000000000000000000".bi(2).leadingZeros())
+        assertEquals(0, "10000000000000000000000000000000".bi(2).leadingZeros())
+        assertEquals(15, "100000000000000000000000000000000".bi(2).leadingZeros())
+        assertEquals(14, "1000000000000000000000000000000000".bi(2).leadingZeros())
+        assertEquals(7, "10000000000000000000000000000000000000000".bi(2).leadingZeros())
+    }
+
 	@Test
 	fun testBitCount() {
 		assertEquals(0, "00000000000000000000000000000000000000000".bi(2).countBits())
@@ -114,4 +136,17 @@ class BigIntTest {
 		assertEquals(2, "10000000000000000000000000000000000000001".bi(2).countBits())
 		assertEquals(7, "10000000001000001000000010000100001000001".bi(2).countBits())
 	}
+
+    @Test
+    fun testSignificantBits() {
+        assertEquals(0, 0.bi.significantBits)
+        assertEquals(1, 1.bi.significantBits)
+        assertEquals(2, 2.bi.significantBits)
+        assertEquals(2, 3.bi.significantBits)
+        assertEquals(16, 0xFFFF.bi.significantBits)
+        assertEquals(24, 0xFFFFFF.bi.significantBits)
+        assertEquals(32, 0xFFFFFFFFL.bi.significantBits)
+        assertEquals(40, 0xFFFFFFFFFFL.bi.significantBits)
+        assertEquals(48, 0xFFFFFFFFFFFFL.bi.significantBits)
+    }
 }
