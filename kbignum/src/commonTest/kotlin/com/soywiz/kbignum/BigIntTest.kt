@@ -1,5 +1,6 @@
 package com.soywiz
 
+import com.soywiz.kbignum.UInt16ArrayZeroPad
 import com.soywiz.kbignum.bi
 import com.soywiz.kbignum.internal.leadingZeros
 import com.soywiz.kbignum.internal.trailingZeros
@@ -24,10 +25,18 @@ class BigIntTest {
 
     @Test
     fun testFailingIr() {
+        assertEquals("4611686018427387904", (1L shl 62).toString())
         assertEquals(
             "100000000000000000000000000000000000000000000000000000000000000",
-            (1.bi * (1L shl 62)).toString2()
+            (1L shl 62).bi.toString2()
         )
+    }
+
+    @Test
+    @Ignore // Fails on Kotlin-JS 1.4-M2 IR
+    fun testFailingIr2() {
+        val v = 1L shl 62
+        assertEquals("$v", v.toString())
     }
 
     @Test

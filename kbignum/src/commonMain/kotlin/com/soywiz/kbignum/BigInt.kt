@@ -47,7 +47,8 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 
 		operator fun invoke(value: Long): BigInt {
 			if (value.toInt().toLong() == value) return invoke(value.toInt())
-			return invoke("$value")
+			//return invoke("$value") // @TODO: Bug in Kotlin-JS IR
+            return invoke(value.toString())
 		}
 
 		private fun create(value: Int): BigInt {
@@ -76,9 +77,13 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 			if (str == "0") return ZERO
 			if (str.startsWith('-')) return -invoke(str.substring(1), radix)
 			var out = ZERO
+            //println("BUILD BIGINT: '$str'")
 			for (c in str) {
+                val digitC = digit(c)
+                //println("BUILD BIGINT[0]: radix=$radix, c='$c', digitC=$digitC")
 				out *= radix
-				out += digit(c)
+				out += digitC
+                //println("BUILD BIGINT[1]: $out")
 			}
 			return out
 		}
@@ -383,22 +388,27 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 	fun toBigNum(): BigNum = BigNum(this, 0)
 }
 
-class UInt16ArrayZeroPad private constructor(val data: IntArray) {
+//class UInt16ArrayZeroPad internal constructor(val data: IntArray) {
+class UInt16ArrayZeroPad(val data: IntArray) {
 	val size get() = data.size
 
 	constructor(size: Int) : this(IntArray(max(1, size)))
 
 	operator fun get(index: Int): Int {
-        if (index !in data.indices) return 0
+        //if (index !in data.indices) return 0
+        if (index < 0 || index >= data.size) return 0
         return data[index]
     }
 	operator fun set(index: Int, value: Int) {
-		if (index !in data.indices) return
+		//if (index !in data.indices) return
+        if (index < 0 || index >= data.size) return
 		data[index] = value and 0xFFFF
 	}
 
 	fun contentEquals(other: UInt16ArrayZeroPad) = this.data.contentEquals(other.data)
 	fun copyOf(size: Int): UInt16ArrayZeroPad = UInt16ArrayZeroPad(data.copyOf(size))
+
+    override fun toString(): String = "UInt16ArrayZeroPad(${data.contentToString()})"
 }
 
 fun uint16ArrayZeroPadOf(vararg values: Int) =
@@ -410,23 +420,23 @@ private fun digit(v: Int): Char {
 	error("Invalid digit $v")
 }
 
-private fun digit(c: Char): Int {
-	return when (c) {
-		in '0'..'9' -> c - '0'
-		in 'a'..'z' -> c - 'a' + 10
-		in 'A'..'Z' -> c - 'A' + 10
-		else -> error("Invalid digit '$c'")
-	}
+private fun digit(c: Char): Int = when (c) {
+    in '0'..'9' -> c - '0'
+    in 'a'..'z' -> c - 'a' + 10
+    in 'A'..'Z' -> c - 'A' + 10
+    else -> error("Invalid digit '$c'")
 }
 
 object UnsignedBigInt {
 	internal fun add(l: UInt16ArrayZeroPad, r: UInt16ArrayZeroPad): UInt16ArrayZeroPad {
+        //println("UnsignedBigInt.add: $l, $r")
 		var carry = 0
 		val out = UInt16ArrayZeroPad(max(l.size, r.size) + 1)
 		for (i in 0 until out.size) {
 			val sum = l[i] + r[i] + carry
 			carry = if ((sum ushr 16) != 0) 1 else 0
 			out[i] = sum - (carry shl 16)
+            //println("UnsignedBigInt.add: ${out[i]}, l=${l[i]}, r=${r[i]}, sum=$sum, cary=$carry")
 		}
 		return out
 	}
@@ -447,6 +457,7 @@ object UnsignedBigInt {
 	// TODO optimize using the Karatsuba algorithm:
 	// TODO: - https://en.wikipedia.org/wiki/Multiplication_algorithm#Karatsuba_multiplication
 	internal fun mul(l: UInt16ArrayZeroPad, r: UInt16ArrayZeroPad): UInt16ArrayZeroPad {
+        //println("UnsignedBigInt.mul: $l, $r")
 		val out = UInt16ArrayZeroPad(l.size + r.size + 1)
 		for (rn in 0 until r.size) {
 			var carry = 0
@@ -455,6 +466,7 @@ object UnsignedBigInt {
 				val res = out[n] + (l[ln] * r[rn]) + carry
 				out[n] = res and 0xFFFF
 				carry = res ushr 16
+                //println("UnsignedBigInt.mul: ${out[n]}, res=$res, cary=$carry")
 			}
 			if (carry != 0) error("carry expected to be zero at this point")
 		}
