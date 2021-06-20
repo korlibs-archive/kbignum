@@ -31,6 +31,7 @@ class BigNum(val int: BigInt, val scale: Int): Number() {
         else -> BigNum(int / (10.bi pow (this.scale - otherScale)), otherScale)
     }
 
+    operator fun unaryMinus(): BigNum = this * BigNum("-1")
 	operator fun plus(other: BigNum): BigNum = binary(other, BigInt::plus)
 	operator fun minus(other: BigNum): BigNum = binary(other, BigInt::minus)
 	operator fun times(other: BigNum): BigNum =
