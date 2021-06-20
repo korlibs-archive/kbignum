@@ -3,6 +3,7 @@ package com.soywiz
 import com.soywiz.kbignum.BigNum
 import com.soywiz.kbignum.bi
 import com.soywiz.kbignum.bn
+import kotlin.random.Random
 import kotlin.test.*
 
 class BigNumTest {
@@ -90,5 +91,13 @@ class BigNumTest {
         assertEquals("0.001", "0.001".bn.convertToScale(4).convertToScale(3).toString())
         //"0.001".bn.convertToScale()
         //assertEquals("-0.0001", "-0.0001".bn.toString())
+    }
+
+    @Test
+    fun unaryMinus()
+    {
+        assertEquals(BigNum("-1"), -BigNum.ONE)
+        val random = Random.nextDouble()
+        assertEquals(BigNum("-$random"), -(random.bn))
     }
 }
