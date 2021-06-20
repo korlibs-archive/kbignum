@@ -5,7 +5,7 @@ import com.soywiz.kbignum.internal.bitCount
 import com.soywiz.kbignum.internal.leadingZeros
 import kotlin.math.*
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
+//import kotlin.time.measureTime
 
 /**
  * @TODO: Use JVM BigInteger and JS BigInt
