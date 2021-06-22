@@ -2,7 +2,7 @@ package com.soywiz.kbignum
 
 import com.soywiz.kbignum.internal.*
 
-class BigNum(val int: BigInt, val scale: Int): Number() {
+class BigNum(val int: BigInt, val scale: Int)/*: Number()*/ {
 	init {
 		//println("BigNum($int, $scale) == $this")
 	}
@@ -80,13 +80,13 @@ class BigNum(val int: BigInt, val scale: Int): Number() {
 		return BigNum(callback(li, ri), commonScale)
 	}
 
-    override fun toDouble() = toString().toDouble()
-    override fun toFloat() = toString().toFloat()
-    override fun toLong() = toString().toLong()
-    override fun toInt() = toString().toInt()
-    override fun toShort() = toString().toShort()
-    override fun toByte() = toString().toByte()
-    override fun toChar() = toInt().toChar()
+    fun toDouble() = toString().toDouble()
+    fun toFloat() = toString().toFloat()
+    fun toLong() = toString().toLong()
+    fun toInt() = toString().toInt()
+    fun toShort() = toString().toShort()
+    fun toByte() = toString().toByte()
+    fun toChar() = toInt().toChar()
 
 	override fun toString(): String {
         val isNegative = int.isNegative

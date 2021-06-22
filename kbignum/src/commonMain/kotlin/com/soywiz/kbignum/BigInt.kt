@@ -10,7 +10,7 @@ import kotlin.time.ExperimentalTime
 /**
  * @TODO: Use JVM BigInteger and JS BigInt
  */
-class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, var dummy: Boolean): Number() {
+class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, var dummy: Boolean)/*: Number()*/ {
 	val isSmall get() = data.size <= 1
 	val isZero get() = signum == 0
 	val isNotZero get() = signum != 0
@@ -374,17 +374,17 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		return out.reversed().toString()
 	}
 
-    override fun toDouble() = toString().toDouble()
-    override fun toFloat() = toString().toFloat()
-    override fun toLong() = toString().toLong()
-	override fun toInt(): Int {
+    fun toDouble() = toString().toDouble()
+    fun toFloat() = toString().toFloat()
+    fun toLong() = toString().toLong()
+	fun toInt(): Int {
 		if (significantBits > 31) error("Can't represent BigInt($this) as integer: maxBits=$maxBits, significantBits=$significantBits, trailingZeros=${trailingZeros()}")
 		val magnitude = (this.data[0].toLong() or (this.data[1].toLong() shl 16)) * signum
 		return magnitude.toInt()
 	}
-    override fun toShort() = toString().toShort()
-    override fun toByte() = toString().toByte()
-    override fun toChar() = toInt().toChar()
+    fun toShort() = toString().toShort()
+    fun toByte() = toString().toByte()
+    fun toChar() = toInt().toChar()
 
 	fun toBigNum(): BigNum = BigNum(this, 0)
 }
