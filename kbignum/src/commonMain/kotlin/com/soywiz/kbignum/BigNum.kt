@@ -41,7 +41,8 @@ class BigNum(val int: BigInt, val scale: Int) {
     operator fun div(other: BigNum): BigNum = div(other, 0)
 
     fun div(other: BigNum, precision: Int): BigNum {
-        val li = this.int * (10.bi pow (other.scale + precision))
+        val scale = (10.bi pow (other.scale + precision))
+        val li = this.int * scale
         val ri = other.int
         val res = li / ri
         return BigNum(res, this.scale) * BigNum(1.bi, precision)
@@ -91,4 +92,19 @@ class BigNum(val int: BigInt, val scale: Int) {
             (out.substring(0, pos) + "." + out.substring(pos)).trimEnd('.')
         }
     }
+
+    fun toBigInt(): BigInt = convertToScale(0).int
+    fun toBigIntFloor(): BigInt = toBigInt()
+    fun toBigIntCeil(): BigInt {
+        val it = this.toBigInt()
+        val decimal = decimalPart
+        return if (decimal.isZero) it else (it + 1.bi)
+    }
+    fun toBigIntRound(): BigInt {
+        val firstDigit = decimalPart / 10.bi.pow(scale - 1)
+        return if (firstDigit.toInt() >= 5) toBigIntCeil() else toBigIntFloor()
+    }
+
+    val decimalPart: BigInt
+        get() = int % 10.bi.pow(scale)
 }
