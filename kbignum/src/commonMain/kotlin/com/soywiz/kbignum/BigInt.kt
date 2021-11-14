@@ -3,14 +3,19 @@ package com.soywiz.kbignum
 import com.soywiz.kbignum.internal.*
 import com.soywiz.kbignum.internal.bitCount
 import com.soywiz.kbignum.internal.leadingZeros
+import com.soywiz.kbignum.ranges.BigIntProgression
+import com.soywiz.kbignum.ranges.BigIntRange
 import kotlin.math.*
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 /**
  * @TODO: Use JVM BigInteger and JS BigInt
  */
-class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, var dummy: Boolean) {
+class BigInt private constructor(
+    val data: UInt16ArrayZeroPad,
+    val signum: Int,
+    var dummy: Boolean
+) : Comparable<BigInt> {
 	val isSmall get() = data.size <= 1
 	val isZero get() = signum == 0
 	val isNotZero get() = signum != 0
@@ -318,14 +323,19 @@ class BigInt private constructor(val data: UInt16ArrayZeroPad, val signum: Int, 
 		return BigInt(out, signum)
 	}
 
-	operator fun compareTo(that: BigInt): Int {
-		if (this.isNegative && that.isPositiveOrZero) return -1
-		if (this.isPositiveOrZero && that.isNegative) return +1
-		val resUnsigned = UnsignedBigInt.compare(this.data, that.data)
-		return if (this.isNegative && that.isNegative) -resUnsigned else resUnsigned
+	override operator fun compareTo(other: BigInt): Int {
+		if (this.isNegative && other.isPositiveOrZero) return -1
+		if (this.isPositiveOrZero && other.isNegative) return +1
+		val resUnsigned = UnsignedBigInt.compare(this.data, other.data)
+		return if (this.isNegative && other.isNegative) -resUnsigned else resUnsigned
 	}
 
-	override fun hashCode(): Int = this.data.hashCode() * this.signum
+    operator fun rangeTo(that: BigInt): BigIntRange = BigIntRange(
+        start = this,
+        endInclusive = that
+    )
+
+    override fun hashCode(): Int = this.data.hashCode() * this.signum
 	override fun equals(other: Any?): Boolean = (other is BigInt) && this.signum == other.signum && this.data.contentEquals(other.data)
 
 	val absoluteValue get() = abs()

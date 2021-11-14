@@ -1,9 +1,10 @@
 package com.soywiz.kbignum
 
 import com.soywiz.kbignum.internal.*
+import com.soywiz.kbignum.ranges.ClosedBigNumRange
 import kotlin.math.*
 
-class BigNum(val int: BigInt, val scale: Int) {
+class BigNum(val int: BigInt, val scale: Int) : Comparable<BigNum> {
     init {
         //println("BigNum($int, $scale) == $this")
     }
@@ -64,10 +65,15 @@ class BigNum(val int: BigInt, val scale: Int) {
         return result
     }
 
-    operator fun compareTo(other: BigNum): Int {
+    override operator fun compareTo(other: BigNum): Int {
         val commonScale = this.commonScale(other)
         return this.convertToScale(commonScale).int.compareTo(other.convertToScale(commonScale).int)
     }
+
+    operator fun rangeTo(that: BigNum): ClosedBigNumRange = ClosedBigNumRange(
+        start = this,
+        endInclusive = that
+    )
 
     override fun equals(other: Any?): Boolean = (other is BigNum) && this.compareTo(other) == 0
 
