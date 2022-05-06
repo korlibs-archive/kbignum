@@ -243,6 +243,42 @@ abstract class AbstractBigIntTest {
         BigInt.usesNativeImplementation
     }
 
+    @Test
+    fun testRegressionIssue14() {
+        assertEquals(BigInt("7020682204035638644"), BigInt("616e794474736574", 16))
+
+        assertEquals(BigInt("15"), BigInt("f", 16))
+        assertEquals(BigInt("255"), BigInt("ff", 16))
+        assertEquals(BigInt("4095"), BigInt("fff", 16))
+        assertEquals(BigInt("65535"), BigInt("ffff", 16))
+        assertEquals(BigInt("1048575"), BigInt("fffff", 16))
+        assertEquals(BigInt("16777215"), BigInt("ffffff", 16))
+        assertEquals(BigInt("268435455"), BigInt("fffffff", 16))
+        assertEquals(BigInt("4294967295"), BigInt("ffffffff", 16))
+        assertEquals(BigInt("68719476735"), BigInt("fffffffff", 16))
+        assertEquals(BigInt("1099511627775"), BigInt("ffffffffff", 16))
+        assertEquals(BigInt("17592186044415"), BigInt("fffffffffff", 16))
+        assertEquals(BigInt("281474976710655"), BigInt("ffffffffffff", 16))
+        assertEquals(BigInt("4503599627370495"), BigInt("fffffffffffff", 16))
+        assertEquals(BigInt("72057594037927935"), BigInt("ffffffffffffff", 16))
+        assertEquals(BigInt("1152921504606846975"), BigInt("fffffffffffffff", 16))
+        assertEquals(BigInt("18446744073709551615"), BigInt("ffffffffffffffff", 16))
+        assertEquals(BigInt("295147905179352825855"), BigInt("fffffffffffffffff", 16))
+        assertEquals(BigInt("4722366482869645213695"), BigInt("ffffffffffffffffff", 16))
+        assertEquals(BigInt("75557863725914323419135"), BigInt("fffffffffffffffffff", 16))
+        assertEquals(BigInt("1208925819614629174706175"), BigInt("ffffffffffffffffffff", 16))
+        assertEquals(BigInt("19342813113834066795298815"), BigInt("fffffffffffffffffffff", 16))
+        assertEquals(BigInt("309485009821345068724781055"), BigInt("ffffffffffffffffffffff", 16))
+        assertEquals(BigInt("4951760157141521099596496895"), BigInt("fffffffffffffffffffffff", 16))
+        assertEquals(BigInt("79228162514264337593543950335"), BigInt("ffffffffffffffffffffffff", 16))
+        assertEquals(BigInt("1267650600228229401496703205375"), BigInt("fffffffffffffffffffffffff", 16))
+        assertEquals(BigInt("20282409603651670423947251286015"), BigInt("ffffffffffffffffffffffffff", 16))
+        assertEquals(BigInt("324518553658426726783156020576255"), BigInt("fffffffffffffffffffffffffff", 16))
+        assertEquals(BigInt("5192296858534827628530496329220095"), BigInt("ffffffffffffffffffffffffffff", 16))
+        assertEquals(BigInt("83076749736557242056487941267521535"), BigInt("fffffffffffffffffffffffffffff", 16))
+        assertEquals(BigInt("1329227995784915872903807060280344575"), BigInt("ffffffffffffffffffffffffffffff", 16))
+    }
+
     // Big Integer
     abstract val Long.bi: BigInt
     abstract val Int.bi: BigInt

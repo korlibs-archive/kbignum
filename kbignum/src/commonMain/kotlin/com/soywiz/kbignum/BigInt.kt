@@ -91,7 +91,8 @@ interface BigIntConstructor {
             sum += d
             mul *= radix
             //if (last || mul * radix > 0x7FFF) {
-            if (last || mul * radix > 0x1FFFFFFF) {
+            //if (last || mul * radix >= 0x1FFFFFFF) {
+            if (last || mul * radix >= 0x1FFFFFF) {
                 out *= mul
                 out += sum
                 sum = 0
