@@ -284,6 +284,12 @@ abstract class AbstractBigIntTest {
         assertFailsWith<BigIntInvalidFormatException> { BigInt("") }
     }
 
+    @Test
+    fun testHashCode() {
+        assertEquals(BigInt("0").hashCode(), BigInt("0").hashCode())
+        assertEquals(BigInt("123").hashCode(), BigInt("123").hashCode())
+    }
+
         // Big Integer
     abstract val Long.bi: BigInt
     abstract val Int.bi: BigInt

@@ -51,6 +51,7 @@ class JvmBigInt(val value: BigInteger) : BigInt, BigIntConstructor by JvmBigInt 
     override fun toString(radix: Int): String = value.toString(radix)
     override fun toString(): String = toString(10)
 
+    override fun hashCode(): Int = value.hashCode()
     override fun equals(other: Any?): Boolean = if (other is JvmBigInt) value == other.value else false
     override fun compareTo(other: BigInt): Int = value.compareTo(other.jvm)
 }

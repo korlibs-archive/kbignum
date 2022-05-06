@@ -54,9 +54,11 @@ class JsBigInt internal constructor(private val value: NativeJsBig) : BigInt, Bi
     override fun div(other: BigInt): BigInt = JsBigInt(this.js / other.js)
     override fun rem(other: BigInt): BigInt = JsBigInt(this.js % other.js)
 
+    private val cachedToString by lazy { value.toString() }
+
     override fun toInt(): Int = NativeJsParseInt(value)
     override fun toString(radix: Int): String = js.toString(radix)
-    override fun toString(): String = value.toString()
+    override fun toString(): String = cachedToString
 
     override fun compareTo(other: BigInt): Int = when {
         this.js < other.js -> -1
@@ -64,5 +66,6 @@ class JsBigInt internal constructor(private val value: NativeJsBig) : BigInt, Bi
         else -> 0
     }
 
+    override fun hashCode(): Int = cachedToString.hashCode()
     override fun equals(other: Any?): Boolean = other is JsBigInt && this.value == other.value
 }

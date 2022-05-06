@@ -73,6 +73,7 @@ class BigNum(val int: BigInt, val scale: Int) {
         return this.convertToScale(commonScale).int.compareTo(other.convertToScale(commonScale).int)
     }
 
+    override fun hashCode(): Int = int.hashCode() + 3 * scale.hashCode()
     override fun equals(other: Any?): Boolean = (other is BigNum) && this.compareTo(other) == 0
 
     private fun commonScale(other: BigNum) = max(this.scale, other.scale)

@@ -319,7 +319,7 @@ class CommonBigInt private constructor(val data: UInt16ArrayZeroPad, override va
 		return if (this.isNegative && that.isNegative) -resUnsigned else resUnsigned
 	}
 
-	override fun hashCode(): Int = this.data.hashCode() * this.signum
+	override fun hashCode(): Int = this.data.contentHashCode() * this.signum
     override fun equals(other: Any?): Boolean = (other is CommonBigInt) && this.signum == other.signum && this.data.contentEquals(other.data)
 
 	val absoluteValue get() = abs()
@@ -457,6 +457,7 @@ class UInt16ArrayZeroPad internal constructor(val data: IntArray) {
 		data[index] = value and UINT16_MASK
 	}
 
+    fun contentHashCode(): Int = data.contentHashCode()
 	fun contentEquals(other: UInt16ArrayZeroPad) = this.data.contentEquals(other.data)
 	fun copyOf(size: Int = this.size): UInt16ArrayZeroPad = UInt16ArrayZeroPad(data.copyOf(size))
 

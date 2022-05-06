@@ -173,4 +173,11 @@ class BigNumTest {
             actual = bi1 / bi2
         )
     }
+
+    @Test
+    fun testHashCode() {
+        assertEquals(BigNum("0.123").hashCode(), BigNum("0.123").hashCode())
+        assertEquals(BigNum("123.123").hashCode(), BigNum("123.123").hashCode())
+    }
+
 }
