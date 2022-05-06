@@ -1,8 +1,17 @@
 package com.soywiz.kbignum
 
+import com.soywiz.kbignum.ranges.*
+
 interface BigInt : Comparable<BigInt>, BigIntConstructor {
     companion object {
         val usesNativeImplementation get() = BigInt(0) !is CommonBigInt
+
+        val ZERO = BigInt("0")
+        val MINUS_ONE = BigInt("-1")
+        val ONE = BigInt("1")
+        val TWO = BigInt("2")
+        val TEN = BigInt("10")
+        val SMALL = BigInt(UINT16_MASK)
     }
 
     // Checks
@@ -49,6 +58,7 @@ interface BigInt : Comparable<BigInt>, BigIntConstructor {
     operator fun times(other: Long): BigInt = this * create(other)
     operator fun div(other: Int): BigInt = this / create(other)
     operator fun rem(other: Int): BigInt = this % create(other)
+    operator fun rangeTo(that: BigInt): BigIntRange = BigIntRange(start = this, endInclusive = that)
 }
 
 interface BigIntCompanion : BigIntConstructor {

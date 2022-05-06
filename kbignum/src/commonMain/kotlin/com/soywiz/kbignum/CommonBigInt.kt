@@ -324,7 +324,8 @@ class CommonBigInt private constructor(val data: UInt16ArrayZeroPad, override va
 
 	val absoluteValue get() = abs()
     override fun abs() = if (this.isZero) ZERO else if (this.isPositive) this else CommonBigInt(this.data, 1)
-	override operator fun unaryPlus(): CommonBigInt = this
+
+    override operator fun unaryPlus(): CommonBigInt = this
     override operator fun unaryMinus(): CommonBigInt = CommonBigInt(this.data, -signum, false)
 
     fun mulAddSmall(mul: Int, add: Int): CommonBigInt {
@@ -566,5 +567,5 @@ internal object UnsignedBigInt {
 	}
 }
 
-private const val UINT16_MASK = 0xFFFF
-private const val UINT16_SHIFT = 16
+internal const val UINT16_MASK = 0xFFFF
+internal const val UINT16_SHIFT = 16
