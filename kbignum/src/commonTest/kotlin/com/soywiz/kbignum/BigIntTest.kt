@@ -279,7 +279,12 @@ abstract class AbstractBigIntTest {
         assertEquals(BigInt("1329227995784915872903807060280344575"), BigInt("ffffffffffffffffffffffffffffff", 16))
     }
 
-    // Big Integer
+    @Test
+    fun testIssue13() {
+        assertFailsWith<BigIntInvalidFormatException> { BigInt("") }
+    }
+
+        // Big Integer
     abstract val Long.bi: BigInt
     abstract val Int.bi: BigInt
     abstract val String.bi: BigInt

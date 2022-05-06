@@ -67,6 +67,7 @@ interface BigIntConstructor {
     }
     // General
     fun create(value: String, radix: Int): BigInt {
+        if (value.isEmpty()) throw BigIntInvalidFormatException("Zero length BigInteger")
         if (value.startsWith('-')) return -create(value.substring(1), radix)
         if (value == "0") return create(0)
         //val wordsRequired = ceil((value.length * log2(radix.toDouble())) / 16.0).toInt()

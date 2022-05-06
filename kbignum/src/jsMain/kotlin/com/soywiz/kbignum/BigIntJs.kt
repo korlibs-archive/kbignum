@@ -15,6 +15,9 @@ class JsBigInt internal constructor(private val value: NativeJsBig) : BigInt, Bi
     companion object : BigIntConstructor {
         override fun create(value: Int): BigInt = JsBigInt(NativeJsBigInt(value))
         override fun create(value: String, radix: Int): BigInt {
+            if (value.isEmpty()) {
+                throw BigIntInvalidFormatException("Zero length BigInteger")
+            }
             if (radix == 10) {
                 validateRadix(value, radix)
                 return JsBigInt(NativeJsBigInt(value))

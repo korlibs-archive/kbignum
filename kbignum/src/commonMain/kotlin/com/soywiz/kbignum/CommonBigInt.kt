@@ -320,7 +320,6 @@ class CommonBigInt private constructor(val data: UInt16ArrayZeroPad, override va
 	}
 
 	override fun hashCode(): Int = this.data.hashCode() * this.signum
-
     override fun equals(other: Any?): Boolean = (other is CommonBigInt) && this.signum == other.signum && this.data.contentEquals(other.data)
 
 	val absoluteValue get() = abs()
